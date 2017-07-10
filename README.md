@@ -1,5 +1,5 @@
 # Gwent Data
-This project contains scripts that transform the Gwent card data contained in xml files into a standardised JSON format.
+This project contains scripts that transform the Gwent card data contained in xml files into a [standardised JSON format](standard-format.json).
 
 ### Getting Card Data from game files
 1. Find and unzip "Path\to\Gwent\GWENT_Data\StreamingAssets\AssetBundles\data\data_definitions".
