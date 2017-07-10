@@ -11,7 +11,7 @@ This project contains scripts that transform the Gwent card data contained in xm
     * "GwentTooltips.xml",
     * "cards_en-US.xml" (Repeat for all locales. Rename them so that they are in the format 'xx-XX'. Upper case is important)
     * "tooltips_en-US.xml". (Repeat for all locales. Rename them so that they are in the format 'xx-XX'. Upper case is important)
-2. Rename "cards_jp-JP.xml" and "tooltips_ja-JP.xml" to "cards_ja-JP.xml" and "tooltips_ja-JP.xml" respectively.
+2. Rename "cards_jp-JP.xml" and "tooltips_jp-JP.xml" to "cards_ja-JP.xml" and "tooltips_ja-JP.xml" respectively.
 3. In GwentCardTemplates.xml, Find and replace "&" with "&amp;" (ignoring quotes). & is invalid xml.
 4. In GwentCardAbilities.xml, Find and replace "{dmg}" with "dmg" (ignoring quotes).
 5. Run master_xml.py, passing in a folder that contains all the files from step 1.
