@@ -16,3 +16,6 @@ This project contains scripts that transforms the Gwent card data contained in x
 4. In GwentCardAbilities.xml, Find and replace "{dmg}" with "dmg" (ignoring quotes).
 5. Run master_xml.py, passing in a folder that contains all the files from step 1.
     e.g. ./master_xml.py ../raw/
+
+## Contributing
+Please branch off of master and then submit a PR with your changes. This allows it to be reviewed by other contributors.
