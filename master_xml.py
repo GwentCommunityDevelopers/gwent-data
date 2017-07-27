@@ -305,9 +305,9 @@ def removeUnreleasedCards(cards):
     # A few cards get falsely flagged as released.
     
     # Gaunter's 'Higher than 5' token
-    cards['200175']['released'] = false
+    cards['200175']['released'] = False
     # Gaunter's 'Lower than 5' token
-    cards['200176']['released'] = false
+    cards['200176']['released'] = False
 
 xml_folder = sys.argv[1]
 
