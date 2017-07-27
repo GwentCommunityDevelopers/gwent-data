@@ -15,7 +15,7 @@ IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com
 IMAGE_SIZES = ['original', 'high', 'medium', 'low', 'thumbnail']
 
 def saveJson(filename, cardList):
-    filepath = os.path.join(xml_folder + "../outputs/" + filename)
+    filepath = os.path.join(xml_folder + "../" + filename)
     print("Saving %s cards to: %s" % (len(cardList), filepath))
     with open(filepath, "w", encoding="utf-8", newline="\n") as f:
         json.dump(cardList, f, sort_keys=True, indent=2, separators=(',', ': '))
@@ -301,6 +301,14 @@ def removeInvalidImages(cards):
                 for size in IMAGE_SIZES:
                     del variation['art'][size]
 
+def removeUnreleasedCards(cards):
+    # A few cards get falsely flagged as released.
+    
+    # Gaunter's 'Higher than 5' token
+    cards['200175']['released'] = False
+    # Gaunter's 'Lower than 5' token
+    cards['200176']['released'] = False
+
 xml_folder = sys.argv[1]
 
 # Add a backslash on the end if it doesn't exist.
@@ -371,5 +379,6 @@ evaluateInfoData(cardData)
 # We have to do this as well to catch cards like Botchling, that are explicitly named in the Baron's tooltip.
 evaluateTokens(cardData)
 removeInvalidImages(cardData)
+removeUnreleasedCards(cardData)
 
 saveJson(str(time.time()) + ".json", cardData)
