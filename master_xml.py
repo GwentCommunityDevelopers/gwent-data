@@ -301,6 +301,14 @@ def removeInvalidImages(cards):
                 for size in IMAGE_SIZES:
                     del variation['art'][size]
 
+def removeUnreleasedCards(cards):
+    # A few cards get falsely flagged as released.
+    
+    # Gaunter's 'Higher than 5' token
+    cards['200175']['released'] = false
+    # Gaunter's 'Lower than 5' token
+    cards['200176']['released'] = false
+
 xml_folder = sys.argv[1]
 
 # Add a backslash on the end if it doesn't exist.
@@ -371,5 +379,6 @@ evaluateInfoData(cardData)
 # We have to do this as well to catch cards like Botchling, that are explicitly named in the Baron's tooltip.
 evaluateTokens(cardData)
 removeInvalidImages(cardData)
+removeUnreleasedCards(cardData)
 
 saveJson(str(time.time()) + ".json", cardData)
