@@ -15,7 +15,7 @@ IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com
 IMAGE_SIZES = ['original', 'high', 'medium', 'low', 'thumbnail']
 
 def saveJson(filename, cardList):
-    filepath = os.path.join(xml_folder + "../outputs/" + filename)
+    filepath = os.path.join(xml_folder + "../" + filename)
     print("Saving %s cards to: %s" % (len(cardList), filepath))
     with open(filepath, "w", encoding="utf-8", newline="\n") as f:
         json.dump(cardList, f, sort_keys=True, indent=2, separators=(',', ': '))
