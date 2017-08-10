@@ -40,8 +40,8 @@ def getRawTooltips(locale):
             continue
         tooltipId = split[1].replace("tooltip_","").replace("_description","").replace("\"", "").lstrip("0")
 
-        # Remove any quotation marks, new lines and html tags.
-        rawTooltips[tooltipId] = cleanHtml(split[2].replace("\"", "").replace("\\n", "\n"))
+        # Remove any quotation marks and new lines.
+        rawTooltips[tooltipId] = split[2].replace("\"\n", "").replace("\\n", "\n")
 
     return rawTooltips
 
@@ -123,6 +123,9 @@ def evaluateInfoData(cards):
                             abilityValue = getAbilityValue(abilityId, paramName)
                             if abilityValue != None:
                                 cards[cardId]['info'][region] = cards[cardId]['info'][region].replace("{" + key + "}", abilityValue)
+
+            cards[cardId]['infoRaw'][region] = cards[cardId]['info'][region]
+            cards[cardId]['info'][region] = cleanHtml(cards[cardId]['info'][region])
 
 def getCardNames(locale):
     CARD_NAME_PATH = xml_folder + "cards_" + locale + ".csv"
@@ -209,6 +212,7 @@ def createCardJson():
 
         if (template.find('Tooltip') != None):
             card['info'] = {}
+            card['infoRaw'] = {}
             for region in LOCALES:
                 # Set to tooltipId for now, we will evaluate after we have looked at every card.
                 card['info'][region] = template.find('Tooltip').attrib['key']
@@ -303,7 +307,7 @@ def removeInvalidImages(cards):
 
 def removeUnreleasedCards(cards):
     # A few cards get falsely flagged as released.
-    
+
     # Gaunter's 'Higher than 5' token
     cards['200175']['released'] = False
     # Gaunter's 'Lower than 5' token
