@@ -9,7 +9,7 @@ from pprint import pprint
 
 from unidecode import unidecode
 
-PATCH = "v0-9-80"
+PATCH = "v0-9-10"
 # Replace with these values {0} : card id, {1} : variation id, {0} : image size
 IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2F" + PATCH + "%2F{0}%2F{1}%2F{2}.png?alt=media"
 IMAGE_SIZES = ['original', 'high', 'medium', 'low', 'thumbnail']
@@ -273,7 +273,9 @@ def evaluateTokens(cards):
         if card['released']:
             card['related'] = []
             for ability in TEMPLATES[cardId].iter('Ability'):
-                ability = ABILITIES[ability.attrib['id']]
+                ability = ABILITIES.get(ability.attrib['id'])
+                if ability == None:
+                    continue
 
                 # There are several different ways that a template can be referenced.
                 for template in ability.iter('templateId'):
@@ -347,32 +349,66 @@ MILL_VALUES['Rare'] = {"standard": 20, "premium": 20, "upgrade": 50}
 MILL_VALUES['Epic'] = {"standard": 50, "premium": 50, "upgrade": 80}
 MILL_VALUES['Legendary'] = {"standard": 200, "premium": 200, "upgrade": 120}
 
-CATEGORIES = {"Vampire": "Vampire",
-              "Mage": "Mage",
-              "Elf": "Elf",
-              "Weather": "Weather",
-              "Special": "Special",
-              "Dyrad": "Dryad",
-              "Breedable": "Breedable",
-              "Blue_Stripes": "Blue Stripes",
-              "Wild_Hunt": "Wild Hunt",
-              "Ambush": "Ambush",
-              "Vodyanoi": "Vodyanoi",
-              "Witcher": "Witcher",
-              "Dwarf": "Dwarf",
-              "War_Machine": "Machine",
-              "Beast": "Beast",
-              "Construct": "Construct",
-              "Cursed_One": "Cursed",
-              "Draconid": "Draconid",
-              "Insectoid": "Insectoid",
-              "Necrophage": "Necrophage",
-              "Ogroid": "Ogroid",
-              "Banish_In_Graveyard": "Doomed",
-              "Relict": "Relict",
-              "Specter": "Specter",
-              "Temeria": "Temeria",
-              "Non_Decoyable": "Stubborn"}
+CATEGORIES = {
+    "Aedirn": "Aedirn",
+    "Alchemy": "Alchemy",
+    "Ambush": "Ambush",
+    "An_Craite": "An Craite",
+    "Banish_In_Graveyard": "Doomed",
+    "Bear": "Bear",
+    "Beast": "Beast",
+    "Blitz": "Blitz",
+    "Blue_Stripes": "Blue Stripes",
+    "Breedable": "Breedable",
+    "Brokvar": "Brokvar",
+    "Cintra": "Cintra",
+    "Construct": "Construct",
+    "Cursed_One": "Cursed",
+    "Devourer": "Devourer",
+    "Dimun": "Dimun",
+    "Double_Agent": "Double Agent",
+    "Draconid": "Draconid",
+    "Dragon": "Dragon",
+    "Drummond": "Drummond",
+    "Dwarf": "Dwarf",
+    "Dyrad": "Dryad",
+    "Elf": "Elf",
+    "Harpy": "Harpy",
+    "Heymaey": "Haymaey",
+    "Insectoid": "Insectoid",
+    "Kaedwen": "Kaedwen",
+    "Leader": "Leader",
+    "Mage": "Mage",
+    "Medic": "Medic",
+    "Necrophage": "Necrophage",
+    "Non_Decoyable": "Stubborn",
+    "Non_Medicable": "Permadeath",
+    "Officer": "Officer",
+    "Ogroid": "Ogroid",
+    "Organic": "Organic",
+    "Potion": "Potion",
+    "Redania": "Redania",
+    "Regressing": "Regressing",
+    "Relict": "Relict",
+    "Shapeshifter": "Shapeshifter",
+    "Soldier": "Soldier",
+    "Special": "Special",
+    "Specter": "Specter",
+    "Spell": "Spell",
+    "Spy": "Agent",
+    "Support": "Support",
+    "Svalblod": "Svalblod",
+    "Tactic": "Tactic",
+    "Temeria": "Temeria",
+    "Tordarroch": "Tordarroch",
+    "Tuirseach": "Tuirseach",
+    "Vampire": "Vampire",
+    "Vodyanoi": "Vodyanoi",
+    "War_Machine": "Machine",
+    "Weather": "Weather",
+    "Wild_Hunt": "Wild Hunt",
+    "Witcher": "Witcher"
+}
 
 LOCALES = ["en-US", "de-DE", "es-ES", "es-MX", "fr-FR", "it-IT", "ja-JP", "pl-PL", "pt-BR", "ru-RU", "zh-CN", "zh-TW"]
 
