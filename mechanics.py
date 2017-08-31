@@ -2,21 +2,7 @@
 import xml.etree.ElementTree as xml
 import sys
 import os
-import json
-import re
-import time
-from pprint import pprint
-
-def saveJson(filename, cardList):
-    filepath = os.path.join(xml_folder + "../" + filename)
-    print("Saving %s cards to: %s" % (len(cardList), filepath))
-    with open(filepath, "w", encoding="utf-8", newline="\n") as f:
-        json.dump(cardList, f, sort_keys=True, indent=2, separators=(',', ': '))
-
-def cleanHtml(raw_html):
-    cleanr = re.compile('<.*?>')
-    cleantext = re.sub(cleanr, '', raw_html)
-    return cleantext
+import Utils
 
 def getKeywords(locale):
     TOOLTIP_STRINGS_PATH = xml_folder + "tooltips_" + locale + ".csv"
@@ -36,17 +22,17 @@ def getKeywords(locale):
         keywords[keywordId] = {}
         # Remove any quotation marks and new lines.
         keywords[keywordId]['raw'] = split[2].replace("\"", "").replace("\n", "")
-        keywords[keywordId]['unformatted'] = cleanHtml(keywords[keywordId]['raw'])
+        keywords[keywordId]['unformatted'] = Utils.cleanHtml(keywords[keywordId]['raw'])
 
     return keywords
 
 def createKeywordJson():
     keywords = {}
-    for locale in LOCALES:
+    for locale in Utils.LOCALES:
         localisedKeywords = getKeywords(locale)
         keywords[locale] = localisedKeywords
 
-    saveJson("keywords.json", keywords)
+    Utils.saveJson(xml_folder + "../keywords.json", keywords)
 
 xml_folder = sys.argv[1]
 
