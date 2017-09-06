@@ -4,9 +4,9 @@ import sys
 import os
 import json
 import re
-from datetime import datetime
 import argparse
 
+from datetime import datetime
 from pprint import pprint
 from unidecode import unidecode
 
@@ -444,5 +444,5 @@ evaluateTokens(cardData)
 evaluateKeywords(cardData)
 removeInvalidImages(cardData)
 removeUnreleasedCards(cardData)
-# Save under v0-9-19-17.09.05.json if the script is ran on 5 September 2017.
-saveJson(PATCH + "-" + datetime.utcnow().strftime("%y.%m.%d") + ".json", cardData)
+# Save under v0-9-10_2017-09-05.json if the script is ran on 5 September 2017 with patch v0-9-10.
+saveJson(PATCH + "_" + datetime.utcnow().strftime("%Y-%m-%d") + ".json", cardData)
