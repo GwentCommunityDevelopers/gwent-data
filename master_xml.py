@@ -4,9 +4,9 @@ import sys
 import os
 import json
 import re
-import time
 import argparse
 
+from datetime import datetime
 from pprint import pprint
 from unidecode import unidecode
 
@@ -44,7 +44,7 @@ def getRawTooltips(locale):
 
     rawTooltips = {}
 
-    tooltipsFile = open(TOOLTIP_STRINGS_PATH, "r")
+    tooltipsFile = open(TOOLTIP_STRINGS_PATH, "r", encoding="utf8")
     for tooltip in tooltipsFile:
         split = tooltip.split("\";\"")
         if len(split) < 2:
@@ -146,7 +146,7 @@ def getCardNames(locale):
 
     cardNames = {}
 
-    nameFile = open(CARD_NAME_PATH, "r")
+    nameFile = open(CARD_NAME_PATH, "r", encoding="utf8")
     for line in nameFile:
         split = line.split(";")
         if len(split) < 2:
@@ -167,7 +167,7 @@ def getFlavorStrings(locale):
 
     flavorStrings = {}
 
-    nameFile = open(CARD_NAME_PATH, "r")
+    nameFile = open(CARD_NAME_PATH, "r", encoding="utf8")
     for line in nameFile:
         split = line.split(";")
         if len(split) < 2:
@@ -444,5 +444,5 @@ evaluateTokens(cardData)
 evaluateKeywords(cardData)
 removeInvalidImages(cardData)
 removeUnreleasedCards(cardData)
-
-saveJson(str(time.time()) + ".json", cardData)
+# Save under v0-9-10_2017-09-05.json if the script is ran on 5 September 2017 with patch v0-9-10.
+saveJson(PATCH + "_" + datetime.utcnow().strftime("%Y-%m-%d") + ".json", cardData)
