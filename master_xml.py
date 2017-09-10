@@ -290,23 +290,43 @@ def evaluateTokens(cards):
 
                 # There are several different ways that a template can be referenced.
                 for template in ability.iter('templateId'):
-                    tokenId = ability.find('templateId').attrib['V']
-                    if cards.get(tokenId) != None:
+                    tokenId = template.attrib['V']
+                    token = cards.get(tokenId)
+                    if isTokenValid(token):
                         cards.get(tokenId)['released'] = True
                         card['related'].append(tokenId)
 
                 for template in ability.iter('TemplatesFromId'):
                     for token in template.iter('id'):
                         tokenId = token.attrib['V']
-                        if cards.get(tokenId) != None:
+                        token = cards.get(tokenId)
+                        if isTokenValid(token):
                             cards.get(tokenId)['released'] = True
                             card['related'].append(tokenId)
 
                 for template in ability.iter('TransformTemplate'):
                     tokenId = template.attrib['V']
-                    if cards.get(tokenId) != None:
+                    token = cards.get(tokenId)
+                    if isTokenValid(token):
                         cards.get(tokenId)['released'] = True
                         card['related'].append(tokenId)
+
+                for template in ability.iter('TemplateId'):
+                    tokenId = template.attrib['V']
+                    token = cards.get(tokenId)
+                    if isTokenValid(token):
+                        token['released'] = True
+                        card['related'].append(tokenId)
+
+def isTokenValid(token):
+    if token != None and token.get('info') != None:
+        valid = True
+        for region in token['info']:
+            if token['info'].get(region) == None or token['info'][region] == '':
+                valid = False
+        return valid
+    else:
+        return False
 
 def evaluateKeywords(cards):
     for cardId in cards:
