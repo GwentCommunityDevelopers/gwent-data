@@ -5,6 +5,7 @@ import os
 import json
 import re
 import argparse
+import Utils
 
 from datetime import datetime
 from pprint import pprint
@@ -24,17 +25,6 @@ xml_folder = args.inputFolder
 # Replace with these values {0} : card id, {1} : variation id, {0} : image size
 IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2F" + PATCH + "%2F{0}%2F{1}%2F{2}.png?alt=media"
 IMAGE_SIZES = ['original', 'high', 'medium', 'low', 'thumbnail']
-
-def saveJson(filename, cardList):
-    filepath = os.path.join(xml_folder + "../" + filename)
-    print("Saving %s cards to: %s" % (len(cardList), filepath))
-    with open(filepath, "w", encoding="utf-8", newline="\n") as f:
-        json.dump(cardList, f, sort_keys=True, indent=2, separators=(',', ': '))
-
-def cleanHtml(raw_html):
-    cleanr = re.compile('<.*?>')
-    cleantext = re.sub(cleanr, '', raw_html)
-    return cleantext
 
 def getRawTooltips(locale):
     TOOLTIP_STRINGS_PATH = xml_folder + "tooltips_" + locale + ".csv"
@@ -100,7 +90,7 @@ def evaluateInfoData(cards):
     # Now that we have the raw strings, we have to get any values that are missing.
     for cardId in cards:
         defaultEvaluated = False
-        for region in LOCALES:
+        for region in Utils.LOCALES:
             # Some cards don't have info.
             if cards[cardId].get('info') == None or cards[cardId]['info'] == "":
                 continue
@@ -136,7 +126,7 @@ def evaluateInfoData(cards):
                                 cards[cardId]['info'][region] = cards[cardId]['info'][region].replace("{" + key + "}", abilityValue)
 
             cards[cardId]['infoRaw'][region] = cards[cardId]['info'][region]
-            cards[cardId]['info'][region] = cleanHtml(cards[cardId]['info'][region])
+            cards[cardId]['info'][region] = Utils.cleanHtml(cards[cardId]['info'][region])
 
 def getCardNames(locale):
     CARD_NAME_PATH = xml_folder + "cards_" + locale + ".csv"
@@ -214,7 +204,7 @@ def createCardJson():
 
         card['name'] = {}
         card['flavor'] = {}
-        for region in LOCALES:
+        for region in Utils.LOCALES:
             card['name'][region] = CARD_NAMES.get(region).get(key)
             card['flavor'][region] = FLAVOR_STRINGS.get(region).get(key)
 
@@ -224,7 +214,7 @@ def createCardJson():
         if (template.find('Tooltip') != None):
             card['info'] = {}
             card['infoRaw'] = {}
-            for region in LOCALES:
+            for region in Utils.LOCALES:
                 # Set to tooltipId for now, we will evaluate after we have looked at every card.
                 card['info'][region] = template.find('Tooltip').attrib['key']
 
@@ -440,8 +430,6 @@ CATEGORIES = {
     "Witcher": "Witcher"
 }
 
-LOCALES = ["en-US", "de-DE", "es-ES", "es-MX", "fr-FR", "it-IT", "ja-JP", "pl-PL", "pt-BR", "ru-RU", "zh-CN", "zh-TW"]
-
 TEMPLATES = getCardTemplates()
 ABILITIES = getAbilityData()
 TOOLTIPS = {}
@@ -449,7 +437,7 @@ TOOLTIP_DATA = getTooltipData()
 CARD_NAMES = {}
 FLAVOR_STRINGS = {}
 
-for region in LOCALES:
+for region in Utils.LOCALES:
     TOOLTIPS[region] = getRawTooltips(region)
     CARD_NAMES[region] = getCardNames(region)
     FLAVOR_STRINGS[region] = getFlavorStrings(region)
@@ -464,5 +452,9 @@ evaluateTokens(cardData)
 evaluateKeywords(cardData)
 removeInvalidImages(cardData)
 removeUnreleasedCards(cardData)
+
 # Save under v0-9-10_2017-09-05.json if the script is ran on 5 September 2017 with patch v0-9-10.
-saveJson(PATCH + "_" + datetime.utcnow().strftime("%Y-%m-%d") + ".json", cardData)
+filename = PATCH + "_" + datetime.utcnow().strftime("%Y-%m-%d") + ".json"
+filepath = os.path.join(xml_folder + "../" + filename)
+print("Saving %s cards to: %s" % (len(cardData), filepath))
+Utils.saveJson(filepath, cardData)
