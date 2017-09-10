@@ -4,12 +4,23 @@ import sys
 import os
 import json
 import re
-import time
-from pprint import pprint
+import argparse
 
+from datetime import datetime
+from pprint import pprint
 from unidecode import unidecode
 
-PATCH = "v0-9-10"
+
+parser = argparse.ArgumentParser(description="Transform the Gwent card data contained in xml files into a "
+                                             "standardised JSON format.",
+                                 epilog="Usage example:\n./master_xml.py ./pathToXML v0-9-10",
+                                 formatter_class=argparse.RawTextHelpFormatter)
+parser.add_argument("inputFolder", help="Folder containing the xml files.")
+parser.add_argument("patch", help="Specifies the Gwent patch version.")
+args = parser.parse_args()
+PATCH = args.patch
+xml_folder = args.inputFolder
+
 # Replace with these values {0} : card id, {1} : variation id, {0} : image size
 IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2F" + PATCH + "%2F{0}%2F{1}%2F{2}.png?alt=media"
 IMAGE_SIZES = ['original', 'high', 'medium', 'low', 'thumbnail']
@@ -33,7 +44,7 @@ def getRawTooltips(locale):
 
     rawTooltips = {}
 
-    tooltipsFile = open(TOOLTIP_STRINGS_PATH, "r")
+    tooltipsFile = open(TOOLTIP_STRINGS_PATH, "r", encoding="utf8")
     for tooltip in tooltipsFile:
         split = tooltip.split("\";\"")
         if len(split) < 2:
@@ -135,7 +146,7 @@ def getCardNames(locale):
 
     cardNames = {}
 
-    nameFile = open(CARD_NAME_PATH, "r")
+    nameFile = open(CARD_NAME_PATH, "r", encoding="utf8")
     for line in nameFile:
         split = line.split(";")
         if len(split) < 2:
@@ -156,7 +167,7 @@ def getFlavorStrings(locale):
 
     flavorStrings = {}
 
-    nameFile = open(CARD_NAME_PATH, "r")
+    nameFile = open(CARD_NAME_PATH, "r", encoding="utf8")
     for line in nameFile:
         split = line.split(";")
         if len(split) < 2:
@@ -279,23 +290,43 @@ def evaluateTokens(cards):
 
                 # There are several different ways that a template can be referenced.
                 for template in ability.iter('templateId'):
-                    tokenId = ability.find('templateId').attrib['V']
-                    if cards.get(tokenId) != None:
+                    tokenId = template.attrib['V']
+                    token = cards.get(tokenId)
+                    if isTokenValid(token):
                         cards.get(tokenId)['released'] = True
                         card['related'].append(tokenId)
 
                 for template in ability.iter('TemplatesFromId'):
                     for token in template.iter('id'):
                         tokenId = token.attrib['V']
-                        if cards.get(tokenId) != None:
+                        token = cards.get(tokenId)
+                        if isTokenValid(token):
                             cards.get(tokenId)['released'] = True
                             card['related'].append(tokenId)
 
                 for template in ability.iter('TransformTemplate'):
                     tokenId = template.attrib['V']
-                    if cards.get(tokenId) != None:
+                    token = cards.get(tokenId)
+                    if isTokenValid(token):
                         cards.get(tokenId)['released'] = True
                         card['related'].append(tokenId)
+
+                for template in ability.iter('TemplateId'):
+                    tokenId = template.attrib['V']
+                    token = cards.get(tokenId)
+                    if isTokenValid(token):
+                        token['released'] = True
+                        card['related'].append(tokenId)
+
+def isTokenValid(token):
+    if token != None and token.get('info') != None:
+        valid = True
+        for region in token['info']:
+            if token['info'].get(region) == None or token['info'][region] == '':
+                valid = False
+        return valid
+    else:
+        return False
 
 def evaluateKeywords(cards):
     for cardId in cards:
@@ -327,7 +358,6 @@ def removeUnreleasedCards(cards):
     # Gaunter's 'Lower than 5' token
     cards['200176']['released'] = False
 
-xml_folder = sys.argv[1]
 
 # Add a backslash on the end if it doesn't exist.
 if xml_folder[-1] != "/":
@@ -434,5 +464,5 @@ evaluateTokens(cardData)
 evaluateKeywords(cardData)
 removeInvalidImages(cardData)
 removeUnreleasedCards(cardData)
-
-saveJson(str(time.time()) + ".json", cardData)
+# Save under v0-9-10_2017-09-05.json if the script is ran on 5 September 2017 with patch v0-9-10.
+saveJson(PATCH + "_" + datetime.utcnow().strftime("%Y-%m-%d") + ".json", cardData)
