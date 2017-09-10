@@ -4,30 +4,13 @@ import sys
 import os
 import json
 import re
-import argparse
 import utils
 
-from datetime import datetime
 from pprint import pprint
 from unidecode import unidecode
 
-
-parser = argparse.ArgumentParser(description="Transform the Gwent card data contained in xml files into a "
-                                             "standardised JSON format.",
-                                 epilog="Usage example:\n./master_xml.py ./pathToXML v0-9-10",
-                                 formatter_class=argparse.RawTextHelpFormatter)
-parser.add_argument("inputFolder", help="Folder containing the xml files.")
-parser.add_argument("patch", help="Specifies the Gwent patch version.")
-args = parser.parse_args()
-PATCH = args.patch
-xml_folder = args.inputFolder
-
-# Replace with these values {0} : card id, {1} : variation id, {0} : image size
-IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2F" + PATCH + "%2F{0}%2F{1}%2F{2}.png?alt=media"
-IMAGE_SIZES = ['original', 'high', 'medium', 'low', 'thumbnail']
-
-def getRawTooltips(locale):
-    TOOLTIP_STRINGS_PATH = xml_folder + "tooltips_" + locale + ".csv"
+def getRawTooltips(rawFolder, locale):
+    TOOLTIP_STRINGS_PATH = rawFolder + "tooltips_" + locale + ".csv"
     if not os.path.isfile(TOOLTIP_STRINGS_PATH):
         print("Couldn't find " + locale + " tooltips at " + TOOLTIP_STRINGS_PATH)
         exit()
@@ -46,9 +29,8 @@ def getRawTooltips(locale):
 
     return rawTooltips
 
-def getAbilityData():
-
-    CARD_ABILITIES_PATH = xml_folder + "GwentCardAbilities.xml"
+def getAbilityData(rawFolder):
+    CARD_ABILITIES_PATH = rawFolder + "GwentCardAbilities.xml"
     if not os.path.isfile(CARD_ABILITIES_PATH):
         print("Couldn't find abilities.xml at " + CARD_ABILITIES_PATH)
         exit()
@@ -70,8 +52,8 @@ def getAbilityValue(abilityId, paramName):
     if ability.find(paramName) != None:
         return ability.find(paramName).attrib['V']
 
-def getTooltipData():
-    TOOLTIPS_PATH = xml_folder + "GwentTooltips.xml"
+def getTooltipData(rawFolder):
+    TOOLTIPS_PATH = rawFolder + "GwentTooltips.xml"
     if not os.path.isfile(TOOLTIPS_PATH):
         print("Couldn't find tooltips.xml at " + TOOLTIPS_PATH)
         exit()
@@ -128,8 +110,8 @@ def evaluateInfoData(cards):
             cards[cardId]['infoRaw'][region] = cards[cardId]['info'][region]
             cards[cardId]['info'][region] = utils.cleanHtml(cards[cardId]['info'][region])
 
-def getCardNames(locale):
-    CARD_NAME_PATH = xml_folder + "cards_" + locale + ".csv"
+def getCardNames(rawFolder, locale):
+    CARD_NAME_PATH = rawFolder + "cards_" + locale + ".csv"
     if not os.path.isfile(CARD_NAME_PATH):
         print("Couldn't find " + locale + " card file at " + CARD_NAME_PATH)
         exit()
@@ -149,8 +131,8 @@ def getCardNames(locale):
     nameFile.close()
     return cardNames
 
-def getFlavorStrings(locale):
-    CARD_NAME_PATH = xml_folder + "cards_" + locale + ".csv"
+def getFlavorStrings(rawFolder, locale):
+    CARD_NAME_PATH = rawFolder + "cards_" + locale + ".csv"
     if not os.path.isfile(CARD_NAME_PATH):
         print("Couldn't find " + locale + " card file at " + CARD_NAME_PATH)
         exit()
@@ -170,8 +152,8 @@ def getFlavorStrings(locale):
     nameFile.close()
     return flavorStrings
 
-def getCardTemplates():
-    TEMPLATES_PATH = xml_folder + "GwentCardTemplates.xml"
+def getCardTemplates(rawFolder):
+    TEMPLATES_PATH = rawFolder + "GwentCardTemplates.xml"
     if not os.path.isfile(TEMPLATES_PATH):
         print("Couldn't find templates.xml at " + TEMPLATES_PATH)
         exit()
@@ -186,7 +168,7 @@ def getCardTemplates():
 
     return cardTemplates
 
-def createCardJson():
+def createBaseCardJson():
     cards = {}
 
     for templateId in TEMPLATES:
@@ -284,7 +266,8 @@ def evaluateTokens(cards):
                     token = cards.get(tokenId)
                     if isTokenValid(token):
                         cards.get(tokenId)['released'] = True
-                        card['related'].append(tokenId)
+                        if tokenId not in card['related']:
+                            card['related'].append(tokenId)
 
                 for template in ability.iter('TemplatesFromId'):
                     for token in template.iter('id'):
@@ -292,21 +275,24 @@ def evaluateTokens(cards):
                         token = cards.get(tokenId)
                         if isTokenValid(token):
                             cards.get(tokenId)['released'] = True
-                            card['related'].append(tokenId)
+                            if tokenId not in card['related']:
+                                card['related'].append(tokenId)
 
                 for template in ability.iter('TransformTemplate'):
                     tokenId = template.attrib['V']
                     token = cards.get(tokenId)
                     if isTokenValid(token):
                         cards.get(tokenId)['released'] = True
-                        card['related'].append(tokenId)
+                        if tokenId not in card['related']:
+                            card['related'].append(tokenId)
 
                 for template in ability.iter('TemplateId'):
                     tokenId = template.attrib['V']
                     token = cards.get(tokenId)
                     if isTokenValid(token):
                         token['released'] = True
-                        card['related'].append(tokenId)
+                        if tokenId not in card['related']:
+                            card['related'].append(tokenId)
 
 def isTokenValid(token):
     if token != None and token.get('info') != None:
@@ -347,15 +333,6 @@ def removeUnreleasedCards(cards):
     cards['200175']['released'] = False
     # Gaunter's 'Lower than 5' token
     cards['200176']['released'] = False
-
-
-# Add a backslash on the end if it doesn't exist.
-if xml_folder[-1] != "/":
-    xml_folder = xml_folder + "/"
-
-if not os.path.isdir(xml_folder):
-    print(xml_folder + " is not a valid directory")
-    exit()
 
 CRAFT_VALUES = {}
 CRAFT_VALUES['Common'] = {"standard": 30, "premium": 200, "upgrade": 100}
@@ -430,31 +407,41 @@ CATEGORIES = {
     "Witcher": "Witcher"
 }
 
-TEMPLATES = getCardTemplates()
-ABILITIES = getAbilityData()
+IMAGE_URL = ""
+IMAGE_SIZES = ['original', 'high', 'medium', 'low', 'thumbnail']
+TEMPLATES = {}
+ABILITIES = {}
 TOOLTIPS = {}
-TOOLTIP_DATA = getTooltipData()
+TOOLTIP_DATA = {}
 CARD_NAMES = {}
 FLAVOR_STRINGS = {}
 
-for region in utils.LOCALES:
-    TOOLTIPS[region] = getRawTooltips(region)
-    CARD_NAMES[region] = getCardNames(region)
-    FLAVOR_STRINGS[region] = getFlavorStrings(region)
+def createCardJson(rawFolder, patch):
+    # Replace with these values {0} : card id, {1} : variation id, {0} : image size
+    global IMAGE_URL
+    IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2F" + patch + "%2F{0}%2F{1}%2F{2}.png?alt=media"
 
-cardData = createCardJson()
+    global TEMPLATES
+    TEMPLATES = getCardTemplates(rawFolder)
+    global ABILITIES
+    ABILITIES = getAbilityData(rawFolder)
+    global TOOLTIP_DATA
+    TOOLTIP_DATA = getTooltipData(rawFolder)
 
-# Requires information about other cards, so needs to be done after we have looked at every card.
-evaluateInfoData(cardData)
-# We have to do this as well to catch cards like Botchling, that are explicitly named in the Baron's tooltip.
-evaluateTokens(cardData)
-# After the info text has been evaluated, we can extract the keywords (e.g. deploy).
-evaluateKeywords(cardData)
-removeInvalidImages(cardData)
-removeUnreleasedCards(cardData)
+    for region in utils.LOCALES:
+        TOOLTIPS[region] = getRawTooltips(rawFolder, region)
+        CARD_NAMES[region] = getCardNames(rawFolder, region)
+        FLAVOR_STRINGS[region] = getFlavorStrings(rawFolder, region)
 
-# Save under v0-9-10_2017-09-05.json if the script is ran on 5 September 2017 with patch v0-9-10.
-filename = PATCH + "_" + datetime.utcnow().strftime("%Y-%m-%d") + ".json"
-filepath = os.path.join(xml_folder + "../" + filename)
-print("Saving %s cards to: %s" % (len(cardData), filepath))
-utils.saveJson(filepath, cardData)
+    cardData = createBaseCardJson()
+
+    # Requires information about other cards, so needs to be done after we have looked at every card.
+    evaluateInfoData(cardData)
+    # We have to do this as well to catch cards like Botchling, that are explicitly named in the Baron's tooltip.
+    evaluateTokens(cardData)
+    # After the info text has been evaluated, we can extract the keywords (e.g. deploy).
+    evaluateKeywords(cardData)
+    removeInvalidImages(cardData)
+    removeUnreleasedCards(cardData)
+
+    return cardData
