@@ -5,7 +5,7 @@ import os
 import json
 import re
 import argparse
-import Utils
+import utils
 
 from datetime import datetime
 from pprint import pprint
@@ -90,7 +90,7 @@ def evaluateInfoData(cards):
     # Now that we have the raw strings, we have to get any values that are missing.
     for cardId in cards:
         defaultEvaluated = False
-        for region in Utils.LOCALES:
+        for region in utils.LOCALES:
             # Some cards don't have info.
             if cards[cardId].get('info') == None or cards[cardId]['info'] == "":
                 continue
@@ -126,7 +126,7 @@ def evaluateInfoData(cards):
                                 cards[cardId]['info'][region] = cards[cardId]['info'][region].replace("{" + key + "}", abilityValue)
 
             cards[cardId]['infoRaw'][region] = cards[cardId]['info'][region]
-            cards[cardId]['info'][region] = Utils.cleanHtml(cards[cardId]['info'][region])
+            cards[cardId]['info'][region] = utils.cleanHtml(cards[cardId]['info'][region])
 
 def getCardNames(locale):
     CARD_NAME_PATH = xml_folder + "cards_" + locale + ".csv"
@@ -204,7 +204,7 @@ def createCardJson():
 
         card['name'] = {}
         card['flavor'] = {}
-        for region in Utils.LOCALES:
+        for region in utils.LOCALES:
             card['name'][region] = CARD_NAMES.get(region).get(key)
             card['flavor'][region] = FLAVOR_STRINGS.get(region).get(key)
 
@@ -214,7 +214,7 @@ def createCardJson():
         if (template.find('Tooltip') != None):
             card['info'] = {}
             card['infoRaw'] = {}
-            for region in Utils.LOCALES:
+            for region in utils.LOCALES:
                 # Set to tooltipId for now, we will evaluate after we have looked at every card.
                 card['info'][region] = template.find('Tooltip').attrib['key']
 
@@ -437,7 +437,7 @@ TOOLTIP_DATA = getTooltipData()
 CARD_NAMES = {}
 FLAVOR_STRINGS = {}
 
-for region in Utils.LOCALES:
+for region in utils.LOCALES:
     TOOLTIPS[region] = getRawTooltips(region)
     CARD_NAMES[region] = getCardNames(region)
     FLAVOR_STRINGS[region] = getFlavorStrings(region)
@@ -457,4 +457,4 @@ removeUnreleasedCards(cardData)
 filename = PATCH + "_" + datetime.utcnow().strftime("%Y-%m-%d") + ".json"
 filepath = os.path.join(xml_folder + "../" + filename)
 print("Saving %s cards to: %s" % (len(cardData), filepath))
-Utils.saveJson(filepath, cardData)
+utils.saveJson(filepath, cardData)

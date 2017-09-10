@@ -2,7 +2,7 @@
 import xml.etree.ElementTree as xml
 import sys
 import os
-import Utils
+import utils
 from datetime import datetime
 
 def getKeywords(locale):
@@ -23,19 +23,19 @@ def getKeywords(locale):
         keywords[keywordId] = {}
         # Remove any quotation marks and new lines.
         keywords[keywordId]['raw'] = split[2].replace("\"", "").replace("\n", "")
-        keywords[keywordId]['unformatted'] = Utils.cleanHtml(keywords[keywordId]['raw'])
+        keywords[keywordId]['unformatted'] = utils.cleanHtml(keywords[keywordId]['raw'])
 
     return keywords
 
 def createKeywordJson():
     keywords = {}
-    for locale in Utils.LOCALES:
+    for locale in utils.LOCALES:
         localisedKeywords = getKeywords(locale)
         keywords[locale] = localisedKeywords
 
     filename = "keywords_" + datetime.utcnow().strftime("%Y-%m-%d") + ".json"
     filepath = os.path.join(xml_folder + "../" + filename)
-    Utils.saveJson(filepath, keywords)
+    utils.saveJson(filepath, keywords)
 
 xml_folder = sys.argv[1]
 
