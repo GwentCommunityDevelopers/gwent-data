@@ -1,13 +1,11 @@
 #!/usr/bin/python3
 import xml.etree.ElementTree as xml
-import sys
 import os
 import json
 import re
 import utils
 
 from pprint import pprint
-from unidecode import unidecode
 
 def getRawTooltips(rawFolder, locale):
     TOOLTIP_STRINGS_PATH = rawFolder + "tooltips_" + locale + ".csv"

@@ -1,9 +1,7 @@
 #!/usr/bin/python3
 import xml.etree.ElementTree as xml
-import sys
 import os
 import utils
-from datetime import datetime
 
 def getKeywords(rawFolder, locale):
     TOOLTIP_STRINGS_PATH = rawFolder + "tooltips_" + locale + ".csv"
