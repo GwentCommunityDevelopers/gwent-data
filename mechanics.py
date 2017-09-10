@@ -3,6 +3,7 @@ import xml.etree.ElementTree as xml
 import sys
 import os
 import Utils
+from datetime import datetime
 
 def getKeywords(locale):
     TOOLTIP_STRINGS_PATH = xml_folder + "tooltips_" + locale + ".csv"
@@ -15,7 +16,7 @@ def getKeywords(locale):
     tooltipsFile = open(TOOLTIP_STRINGS_PATH, "r")
     for tooltip in tooltipsFile:
         split = tooltip.split("\";\"")
-        if len(split) < 2:
+        if len(split) < 2 or "keyword" not in split[1]:
             continue
         keywordId = split[1].replace("keyword_","").replace("\"", "")
 
@@ -32,7 +33,9 @@ def createKeywordJson():
         localisedKeywords = getKeywords(locale)
         keywords[locale] = localisedKeywords
 
-    Utils.saveJson(xml_folder + "../keywords.json", keywords)
+    filename = "keywords_" + datetime.utcnow().strftime("%Y-%m-%d") + ".json"
+    filepath = os.path.join(xml_folder + "../" + filename)
+    Utils.saveJson(filepath, keywords)
 
 xml_folder = sys.argv[1]
 
@@ -43,7 +46,5 @@ if xml_folder[-1] != "/":
 if not os.path.isdir(xml_folder):
     print(xml_folder + " is not a valid directory")
     exit()
-
-LOCALES = ["en-US"] #, "de-DE", "es-ES", "es-MX", "fr-FR", "it-IT", "ja-JP", "pl-PL", "pt-BR", "ru-RU", "zh-CN", "zh-TW"
 
 createKeywordJson()
