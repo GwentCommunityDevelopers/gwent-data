@@ -324,7 +324,3 @@ class CardData:
             return None
         if ability.find(paramName) != None:
             return ability.find(paramName).attrib['V']
-
-def createCardJson(gwentDataHelper, patch):
-    cardData = CardData(gwentDataHelper)
-    return cardData.createCardJson(patch)

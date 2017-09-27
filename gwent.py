@@ -2,11 +2,11 @@
 import argparse
 import os
 
-import card_data
 import mechanics
 import GwentUtils
 
 from datetime import datetime
+from CardData import CardData
 
 parser = argparse.ArgumentParser(description="Transform the Gwent card data contained in xml files into a "
                                              "standardised JSON format.",
@@ -38,7 +38,7 @@ filepath = os.path.join(rawFolder + "../" + filename)
 GwentUtils.saveJson(filepath, keywordsJson)
 
 print("Creating card data JSON...")
-cardsJson = card_data.createCardJson(gwentDataHelper, PATCH)
+cardsJson = CardData(gwentDataHelper).createCardJson(PATCH)
 filename = "cards_" + BASE_FILENAME
 filepath = os.path.join(rawFolder + "../" + filename)
 print("Found %s cards." % (len(cardsJson)))
