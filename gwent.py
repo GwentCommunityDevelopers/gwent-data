@@ -1,12 +1,11 @@
 #!/usr/bin/python3
 import argparse
 import os
-
-import mechanics
 import GwentUtils
 
 from datetime import datetime
 from CardData import CardData
+from KeywordData import KeywordData
 
 parser = argparse.ArgumentParser(description="Transform the Gwent card data contained in xml files into a "
                                              "standardised JSON format.",
@@ -32,7 +31,7 @@ gwentDataHelper = GwentUtils.GwentDataHelper(rawFolder)
 BASE_FILENAME = PATCH + "_" + datetime.utcnow().strftime("%Y-%m-%d") + ".json"
 
 print("Creating keyword JSON...")
-keywordsJson = mechanics.createKeywordJson(gwentDataHelper)
+keywordsJson = KeywordData(gwentDataHelper).createKeywordJson()
 filename = "keywords_" + BASE_FILENAME
 filepath = os.path.join(rawFolder + "../" + filename)
 GwentUtils.saveJson(filepath, keywordsJson)
