@@ -308,6 +308,10 @@ class CardData:
                             if tokenId not in card['related']:
                                 card['related'].append(tokenId)
 
+                # We may not have added any cards to 'related'.
+                if len(card['related']) == 0:
+                    del card['related']
+
     def _isTokenValid(self, token):
         if token != None and token.get('info') != None:
             valid = True
