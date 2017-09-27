@@ -2,7 +2,7 @@
 import argparse
 import os
 
-#import card_data
+import card_data
 import mechanics
 import GwentUtils
 
@@ -26,20 +26,20 @@ if not os.path.isdir(rawFolder):
     print(rawFolder + " is not a valid directory")
     exit()
 
-gwentData = GwentUtils.GwentData(rawFolder)
+gwentDataHelper = GwentUtils.GwentDataHelper(rawFolder)
 
 # Save under v0-9-10_2017-09-05.json if the script is ran on 5 September 2017 with patch v0-9-10.
 BASE_FILENAME = PATCH + "_" + datetime.utcnow().strftime("%Y-%m-%d") + ".json"
 
 print("Creating keyword JSON...")
-keywordsJson = mechanics.createKeywordJson(gwentData)
+keywordsJson = mechanics.createKeywordJson(gwentDataHelper)
 filename = "keywords_" + BASE_FILENAME
 filepath = os.path.join(rawFolder + "../" + filename)
 GwentUtils.saveJson(filepath, keywordsJson)
 
-#print("Creating card data JSON...")
-#cardsJson = card_data.createCardJson(rawFolder, PATCH)
-#filename = "cards_" + BASE_FILENAME
-#filepath = os.path.join(rawFolder + "../" + filename)
-#print("Found %s cards." % (len(cardsJson)))
-#utils.saveJson(filepath, cardsJson)
+print("Creating card data JSON...")
+cardsJson = card_data.createCardJson(gwentDataHelper, PATCH)
+filename = "cards_" + BASE_FILENAME
+filepath = os.path.join(rawFolder + "../" + filename)
+print("Found %s cards." % (len(cardsJson)))
+GwentUtils.saveJson(filepath, cardsJson)

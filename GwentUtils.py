@@ -92,13 +92,6 @@ class GwentDataHelper:
 
         return abilities
 
-    def getCardAbilityValue(self, abilityId, paramName):
-        ability = self.cardAbilities.get(abilityId)
-        if ability == None:
-            return None
-        if ability.find(paramName) != None:
-            return ability.find(paramName).attrib['V']
-
     def getTooltipData(self):
         path = self._folder + "GwentTooltips.xml"
         if not os.path.isfile(path):
