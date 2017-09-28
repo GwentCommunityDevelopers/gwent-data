@@ -80,19 +80,10 @@ CATEGORIES = {
 
 class CardData:
     def __init__(self, gwent_data_helper):
+        self._helper = gwent_data_helper
         self.patch = None
         self.imageUrl = None
         self.cardTemplates = gwent_data_helper.get_card_templates()
-        self.tooltipData = gwent_data_helper.get_tooltip_data()
-        self.abilityData = gwent_data_helper.get_card_abilities()
-        self.cardNames = {}
-        self.tooltips = {}
-        self.flavorStrings = {}
-
-        for locale in GwentUtils.LOCALES:
-            self.cardNames[locale] = gwent_data_helper.get_card_names(locale)
-            self.tooltips[locale] = gwent_data_helper.get_card_tooltips(locale)
-            self.flavorStrings[locale] = gwent_data_helper.get_flavor_strings(locale)
 
     def create_card_json(self, patch):
         self.patch = patch
@@ -102,12 +93,8 @@ class CardData:
 
         card_data = self._create_base_card_json()
 
-        # Requires information about other cards, so needs to be done after we have looked at every card.
-        self._evaluate_info_data(card_data)
         # We have to do this as well to catch cards like Botchling, that are explicitly named in the Baron's tooltip.
-        self._evaluate_tokens(card_data)
-        # After the info text has been evaluated, we can extract the keywords (e.g. deploy).
-        self._evaluate_keywords(card_data)
+        #self._evaluate_tokens(card_data)
         self._remove_invalid_images(card_data)
         self._remove_unreleased_cards(card_data)
 
@@ -132,18 +119,23 @@ class CardData:
             card['name'] = {}
             card['flavor'] = {}
             for region in GwentUtils.LOCALES:
-                card['name'][region] = self.cardNames.get(region).get(key)
-                card['flavor'][region] = self.flavorStrings.get(region).get(key)
+                card['name'][region] = self._helper.card_names.get(region).get(key)
+                card['flavor'][region] = self._helper.flavor_strings.get(region).get(key)
 
             # False by default, will be set to true if collectible or is a token of a released card.
             card['released'] = False
 
             if template.find('Tooltip') is not None:
+                tooltip_id = template.find('Tooltip').attrib['key']
                 card['info'] = {}
                 card['infoRaw'] = {}
-                for region in GwentUtils.LOCALES:
-                    # Set to tooltipId for now, we will evaluate after we have looked at every card.
-                    card['info'][region] = template.find('Tooltip').attrib['key']
+                for locale in GwentUtils.LOCALES:
+                    tooltip = self._helper.tooltips[locale].get(tooltip_id)
+                    if tooltip is not None:
+                        card['infoRaw'][locale] = tooltip
+                        card['info'][locale] = GwentUtils.clean_html(tooltip)
+
+                card['keywords'] = self._helper.keywords.get(tooltip_id)
 
             card['positions'] = []
             card['loyalties'] = []
@@ -193,64 +185,6 @@ class CardData:
             cards[card['ingameId']] = card
 
         return cards
-
-    def _evaluate_info_data(self, cards):
-        # Now that we have the raw strings, we have to get any values that are missing.
-        for card_id in cards:
-            for region in GwentUtils.LOCALES:
-                # Some cards don't have info.
-                if cards[card_id].get('info') is None or cards[card_id]['info'] == "":
-                    continue
-
-                # Set info to be the raw tooltip string.
-                tooltip_id = cards[card_id]['info'][region]
-                cards[card_id]['info'][region] = self.tooltips[region].get(tooltip_id)
-                # Regex. Get all strings that lie between a '{' and '}'.
-                result = re.findall(r'.*?\{(.*?)\}.*?', cards[card_id]['info'][region])
-
-                tooltip = self.tooltipData.get(tooltip_id)
-                for key in result:
-                    for variable in tooltip.iter('VariableData'):
-                        data = variable.find(key)
-                        if data is None:
-                            # This is not the right variable for this key, let's check the next one.
-                            continue
-                        if "crd" in key:
-                            # Spawn a specific card.
-                            crd = data.attrib['V']
-                            if crd != "":
-                                cards[card_id]['info'][region] = cards[card_id]['info'][region]\
-                                    .replace("{" + key + "}", cards[crd]['name'][region])
-                                # We've dealt with this key, move on.
-                                continue
-                        if variable.attrib['key'] == key:
-                            # The value is sometimes given immediately here.
-                            if data.attrib['V'] != "":
-                                cards[card_id]['info'][region] = cards[card_id]['info'][region]\
-                                    .replace("{" + key + "}", data.attrib['V'])
-                            else: # Otherwise we are going to have to look in the ability data to find the value.
-                                ability_id = variable.find(key).attrib['abilityId']
-                                param_name = variable.find(key).attrib['paramName']
-                                ability_value = self._get_card_ability_value(ability_id, param_name)
-                                if ability_value is not None:
-                                    cards[card_id]['info'][region] = cards[card_id]['info'][region]\
-                                        .replace("{" + key + "}", ability_value)
-
-                cards[card_id]['infoRaw'][region] = cards[card_id]['info'][region]
-                cards[card_id]['info'][region] = GwentUtils.clean_html(cards[card_id]['info'][region])
-
-    @staticmethod
-    def _evaluate_keywords(cards):
-        for card_id in cards:
-            card = cards[card_id]
-            if card.get('infoRaw') is None:
-                continue
-            card['keywords'] = []
-            # Find all keywords in info string. E.g. find 'spawn' in '<keyword=spawn>'
-            # Can just use en-US here. It doesn't matter, all regions will return the same result.
-            result = re.findall(r'<keyword=([^>]+)>', card['infoRaw']['en-US'])
-            for key in result:
-                card['keywords'].append(key)
 
     # If a card is not collectible, we don't have the art for it.
     @staticmethod

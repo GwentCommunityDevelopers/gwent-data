@@ -4,6 +4,7 @@ import re
 import os
 
 import xml.etree.ElementTree as xml
+from pprint import pprint
 
 LOCALES = ["en-US", "de-DE", "es-ES", "es-MX", "fr-FR", "it-IT", "ja-JP", "pl-PL", "pt-BR", "ru-RU", "zh-CN", "zh-TW"]
 
@@ -23,6 +24,90 @@ def clean_html(raw_html):
 class GwentDataHelper:
     def __init__(self, raw_folder):
         self._folder = raw_folder
+        raw_tooltips = {}
+        self.card_names = {}
+        self.flavor_strings = {}
+        for locale in LOCALES:
+            raw_tooltips[locale] = self.get_card_tooltips(locale)
+            self.card_names[locale] = self.get_card_names(locale)
+            self.flavor_strings[locale] = self.get_flavor_strings(locale)
+        tooltip_data = self.get_tooltip_data()
+        card_abilities = self.get_card_abilities()
+
+        self.tooltips = {}
+        for locale in LOCALES:
+            self.tooltips[locale] = self._get_evaluated_tooltips(raw_tooltips[locale], tooltip_data, self.card_names[locale], card_abilities)
+
+        # Can use any locale here, all locales will return the same result.
+        self.keywords = self._get_keywords(self.tooltips[LOCALES[0]])
+
+    @staticmethod
+    def _get_evaluated_tooltips(raw_tooltips, tooltip_data, card_names, card_abilities):
+        # Generate complete tooltips from the raw_tooltips and accompanying data.
+        tooltips = {}
+        for tooltip_id in raw_tooltips:
+            # Some cards don't have info.
+            if raw_tooltips.get(tooltip_id) is None or raw_tooltips.get(tooltip_id) == "":
+                continue
+
+            # Set tooltip to be the raw tooltip string.
+            tooltips[tooltip_id] = raw_tooltips[tooltip_id]
+            # Regex. Get all strings that lie between a '{' and '}'.
+            result = re.findall(r'.*?\{(.*?)\}.*?', tooltips[tooltip_id])
+            card_data = tooltip_data.get(tooltip_id)
+            if card_data is None:
+                continue
+            for key in result:
+                for variable in card_data.iter('VariableData'):
+                    data = variable.find(key)
+                    if data is None:
+                        # This is not the right variable for this key, let's check the next one.
+                        continue
+                    if "crd" in key:
+                        # Spawn a specific card.
+                        crd = data.attrib['V']
+                        if crd != "":
+                            tooltips[tooltip_id] = tooltips[tooltip_id]\
+                                .replace("{" + key + "}", card_names[crd])
+                            # We've dealt with this key, move on.
+                            continue
+                    if variable.attrib['key'] == key:
+                        # The value is sometimes given immediately here.
+                        if data.attrib['V'] != "":
+                            tooltips[tooltip_id] = tooltips[tooltip_id]\
+                                .replace("{" + key + "}", data.attrib['V'])
+                        else: # Otherwise we are going to have to look in the ability data to find the value.
+                            ability_id = variable.find(key).attrib['abilityId']
+                            param_name = variable.find(key).attrib['paramName']
+                            ability_value = GwentDataHelper._get_card_ability_value(card_abilities, ability_id, param_name)
+                            if ability_value is not None:
+                                tooltips[tooltip_id] = tooltips[tooltip_id]\
+                                    .replace("{" + key + "}", ability_value)
+
+        return tooltips
+
+    @staticmethod
+    def _get_card_ability_value(card_abilities, ability_id, param_name):
+        ability = card_abilities.get(ability_id)
+        if ability is None:
+            return None
+        if ability.find(param_name) is not None:
+            return ability.find(param_name).attrib['V']
+
+    @staticmethod
+    def _get_keywords(tooltips):
+        keywords_by_tooltip_id = {}
+        for tooltip_id in tooltips:
+            tooltip = tooltips[tooltip_id]
+            keywords = []
+            # Find all keywords in info string. E.g. find 'spawn' in '<keyword=spawn>'
+            # Can just use en-US here. It doesn't matter, all regions will return the same result.
+            result = re.findall(r'<keyword=([^>]+)>', tooltip)
+            for key in result:
+                keywords.append(key)
+
+            keywords_by_tooltip_id[tooltip_id] = keywords
+        return keywords_by_tooltip_id
 
     def get_tooltips_file(self, locale):
         path = self._folder + "tooltips_" + locale + ".csv"
@@ -36,7 +121,7 @@ class GwentDataHelper:
         tooltips = {}
         for tooltip in tooltips_file:
             split = tooltip.split("\";\"")
-            if len(split) < 2:
+            if len(split) < 2 or "tooltip" not in split[1]:
                 continue
             tooltip_id = split[1].replace("tooltip_", "").replace("_description", "").replace("\"", "").lstrip("0")
 
