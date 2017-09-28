@@ -193,8 +193,7 @@ class GwentDataHelper:
 
             keywords[keyword_id] = {}
             # Remove any quotation marks and new lines.
-            keywords[keyword_id]['raw'] = split[2].replace("\"", "").replace("\n", "")
-            keywords[keyword_id]['unformatted'] = clean_html(keywords[keyword_id]['raw'])
+            keywords[keyword_id] = split[2].replace("\"", "").replace("\n", "")
 
         tooltips_file.close()
         return keywords
