@@ -80,20 +80,19 @@ CATEGORIES = {
 
 class CardData:
     def __init__(self, gwent_data_helper):
-        helper = gwent_data_helper
         self.patch = None
         self.imageUrl = None
-        self.cardTemplates = self._helper.getCardTemplates()
-        self.tooltipData = self._helper.getTooltipData()
-        self.abilityData = self._helper.getCardAbilities()
+        self.cardTemplates = gwent_data_helper.get_card_templates()
+        self.tooltipData = gwent_data_helper.get_tooltip_data()
+        self.abilityData = gwent_data_helper.get_card_abilities()
         self.cardNames = {}
         self.tooltips = {}
         self.flavorStrings = {}
 
         for locale in GwentUtils.LOCALES:
-            self.cardNames[locale] = helper.getCardNames(locale)
-            self.tooltips[locale] = helper.getCardTooltips(locale)
-            self.flavorStrings[locale] = helper.getFlavorStrings(locale)
+            self.cardNames[locale] = gwent_data_helper.get_card_names(locale)
+            self.tooltips[locale] = gwent_data_helper.get_card_tooltips(locale)
+            self.flavorStrings[locale] = gwent_data_helper.get_flavor_strings(locale)
 
     def create_card_json(self, patch):
         self.patch = patch
@@ -101,16 +100,16 @@ class CardData:
         self.imageUrl = "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2F" +\
                         patch + "%2F{0}%2F{1}%2F{2}.png?alt=media"
 
-        card_data = self._createBaseCardJson()
+        card_data = self._create_base_card_json()
 
         # Requires information about other cards, so needs to be done after we have looked at every card.
-        self._evaluateInfoData(card_data)
+        self._evaluate_info_data(card_data)
         # We have to do this as well to catch cards like Botchling, that are explicitly named in the Baron's tooltip.
-        self._evaluateTokens(card_data)
+        self._evaluate_tokens(card_data)
         # After the info text has been evaluated, we can extract the keywords (e.g. deploy).
-        self._evaluateKeywords(card_data)
-        self._removeInvalidImages(card_data)
-        self._removeUnreleasedCards(card_data)
+        self._evaluate_keywords(card_data)
+        self._remove_invalid_images(card_data)
+        self._remove_unreleased_cards(card_data)
 
         return card_data
 
@@ -232,13 +231,13 @@ class CardData:
                             else: # Otherwise we are going to have to look in the ability data to find the value.
                                 ability_id = variable.find(key).attrib['abilityId']
                                 param_name = variable.find(key).attrib['paramName']
-                                ability_value = self._getCardAbilityValue(ability_id, param_name)
+                                ability_value = self._get_card_ability_value(ability_id, param_name)
                                 if ability_value is not None:
                                     cards[cardId]['info'][region] = cards[cardId]['info'][region]\
                                         .replace("{" + key + "}", ability_value)
 
                 cards[cardId]['infoRaw'][region] = cards[cardId]['info'][region]
-                cards[cardId]['info'][region] = GwentUtils.cleanHtml(cards[cardId]['info'][region])
+                cards[cardId]['info'][region] = GwentUtils.clean_html(cards[cardId]['info'][region])
 
     @staticmethod
     def _evaluate_keywords(cards):
@@ -288,7 +287,7 @@ class CardData:
                     for template in ability.iter('templateId'):
                         token_id = template.attrib['V']
                         token = cards.get(token_id)
-                        if self._isTokenValid(token):
+                        if self._is_token_valid(token):
                             cards.get(token_id)['released'] = True
                             if token_id not in card['related']:
                                 card['related'].append(token_id)
@@ -297,7 +296,7 @@ class CardData:
                         for token in template.iter('id'):
                             token_id = token.attrib['V']
                             token = cards.get(token_id)
-                            if self._isTokenValid(token):
+                            if self._is_token_valid(token):
                                 cards.get(token_id)['released'] = True
                                 if token_id not in card['related']:
                                     card['related'].append(token_id)
@@ -305,7 +304,7 @@ class CardData:
                     for template in ability.iter('TransformTemplate'):
                         token_id = template.attrib['V']
                         token = cards.get(token_id)
-                        if self._isTokenValid(token):
+                        if self._is_token_valid(token):
                             cards.get(token_id)['released'] = True
                             if token_id not in card['related']:
                                 card['related'].append(token_id)
@@ -313,7 +312,7 @@ class CardData:
                     for template in ability.iter('TemplateId'):
                         token_id = template.attrib['V']
                         token = cards.get(token_id)
-                        if self._isTokenValid(token):
+                        if self._is_token_valid(token):
                             token['released'] = True
                             if token_id not in card['related']:
                                 card['related'].append(token_id)

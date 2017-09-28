@@ -9,6 +9,6 @@ class KeywordData:
     def create_keyword_json(self):
         keywords = {}
         for locale in GwentUtils.LOCALES:
-            keywords[locale] = self._helper.getKeywordTooltips(locale)
+            keywords[locale] = self._helper.get_keyword_tooltips(locale)
 
         return keywords

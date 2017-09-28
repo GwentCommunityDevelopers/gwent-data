@@ -32,7 +32,7 @@ class GwentDataHelper:
         return path
 
     def get_card_tooltips(self, locale):
-        tooltips_file = open(self.getTooltipsFile(locale), "r")
+        tooltips_file = open(self.get_tooltips_file(locale), "r")
         tooltips = {}
         for tooltip in tooltips_file:
             split = tooltip.split("\";\"")
@@ -47,7 +47,7 @@ class GwentDataHelper:
         return tooltips
 
     def get_keyword_tooltips(self, locale):
-        tooltips_file = open(self.getTooltipsFile(locale), "r")
+        tooltips_file = open(self.get_tooltips_file(locale), "r")
         keywords = {}
         for tooltip in tooltips_file:
             split = tooltip.split("\";\"")
@@ -112,7 +112,7 @@ class GwentDataHelper:
         return tooltip_data
 
     def get_card_names(self, locale):
-        card_name_file = open(self.getCardNamesFile(locale), "r", encoding="utf8")
+        card_name_file = open(self.get_card_names_file(locale), "r", encoding="utf8")
         card_names = {}
         for line in card_name_file:
             split = line.split(";")
@@ -127,7 +127,7 @@ class GwentDataHelper:
         return card_names
 
     def get_flavor_strings(self, locale):
-        card_name_file = open(self.getCardNamesFile(locale), "r", encoding="utf8")
+        card_name_file = open(self.get_card_names_file(locale), "r", encoding="utf8")
         flavor_strings = {}
         for line in card_name_file:
             split = line.split(";")
