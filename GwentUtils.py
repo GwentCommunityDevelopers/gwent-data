@@ -8,12 +8,10 @@ from pprint import pprint
 
 LOCALES = ["en-US", "de-DE", "es-ES", "es-MX", "fr-FR", "it-IT", "ja-JP", "pl-PL", "pt-BR", "ru-RU", "zh-CN", "zh-TW"]
 
-
 def save_json(filepath, data):
     print("Saved JSON to: %s" % filepath)
     with open(filepath, "w", encoding="utf-8", newline="\n") as f:
         json.dump(data, f, sort_keys=True, indent=2, separators=(',', ': '))
-
 
 def clean_html(raw_html):
     cleanr = re.compile('<.*?>')
@@ -31,6 +29,114 @@ def _is_token_valid(token, tooltips):
     else:
         return False
 
+def _get_evaluated_tooltips(raw_tooltips, tooltip_data, card_names, card_abilities):
+    # Generate complete tooltips from the raw_tooltips and accompanying data.
+    tooltips = {}
+    for tooltip_id in raw_tooltips:
+        # Some cards don't have info.
+        if raw_tooltips.get(tooltip_id) is None or raw_tooltips.get(tooltip_id) == "":
+            tooltips[tooltip_id] = ""
+            continue
+
+        # Set tooltip to be the raw tooltip string.
+        tooltips[tooltip_id] = raw_tooltips[tooltip_id]
+        # Regex. Get all strings that lie between a '{' and '}'.
+        result = re.findall(r'.*?\{(.*?)\}.*?', tooltips[tooltip_id])
+        card_data = tooltip_data.get(tooltip_id)
+        if card_data is None:
+            continue
+        for key in result:
+            for variable in card_data.iter('VariableData'):
+                data = variable.find(key)
+                if data is None:
+                    # This is not the right variable for this key, let's check the next one.
+                    continue
+                if "crd" in key:
+                    # Spawn a specific card.
+                    crd = data.attrib['V']
+                    if crd != "":
+                        tooltips[tooltip_id] = tooltips[tooltip_id]\
+                            .replace("{" + key + "}", card_names[crd])
+                        # We've dealt with this key, move on.
+                        continue
+                if variable.attrib['key'] == key:
+                    # The value is sometimes given immediately here.
+                    if data.attrib['V'] != "":
+                        tooltips[tooltip_id] = tooltips[tooltip_id]\
+                            .replace("{" + key + "}", data.attrib['V'])
+                    else: # Otherwise we are going to have to look in the ability data to find the value.
+                        ability_id = variable.find(key).attrib['abilityId']
+                        param_name = variable.find(key).attrib['paramName']
+                        ability_value = _get_card_ability_value(card_abilities, ability_id, param_name)
+                        if ability_value is not None:
+                            tooltips[tooltip_id] = tooltips[tooltip_id]\
+                                .replace("{" + key + "}", ability_value)
+
+    return tooltips
+
+def _get_card_ability_value(card_abilities, ability_id, param_name):
+    ability = card_abilities.get(ability_id)
+    if ability is None:
+        return None
+    if ability.find(param_name) is not None:
+        return ability.find(param_name).attrib['V']
+
+def _get_tokens(card_templates, card_abilities, tooltips):
+    tokens = {}
+    for card_id in card_templates:
+        template = card_templates[card_id]
+        tokens[card_id] = []
+        for ability in template.iter('Ability'):
+            ability = card_abilities.get(ability.attrib['id'])
+            if ability is None:
+                continue
+
+            # There are several different ways that a template can be referenced.
+            for template in ability.iter('templateId'):
+                token_id = template.attrib['V']
+                token = card_templates.get(token_id)
+                if _is_token_valid(token, tooltips):
+                    if token_id not in tokens[card_id]:
+                        tokens[card_id].append(token_id)
+
+            for template in ability.iter('TemplatesFromId'):
+                for token in template.iter('id'):
+                    token_id = token.attrib['V']
+                    token = card_templates.get(token_id)
+                    if _is_token_valid(token, tooltips):
+                        if token_id not in tokens[card_id]:
+                            tokens[card_id].append(token_id)
+
+            for template in ability.iter('TransformTemplate'):
+                token_id = template.attrib['V']
+                token = card_templates.get(token_id)
+                if _is_token_valid(token, tooltips):
+                    if token_id not in tokens[card_id]:
+                        tokens[card_id].append(token_id)
+
+            for template in ability.iter('TemplateId'):
+                token_id = template.attrib['V']
+                token = card_templates.get(token_id)
+                if _is_token_valid(token, tooltips):
+                    if token_id not in tokens[card_id]:
+                        tokens[card_id].append(token_id)
+
+    return tokens
+
+def _get_keywords(tooltips):
+    keywords_by_tooltip_id = {}
+    for tooltip_id in tooltips:
+        tooltip = tooltips[tooltip_id]
+        keywords = []
+        # Find all keywords in info string. E.g. find 'spawn' in '<keyword=spawn>'
+        # Can just use en-US here. It doesn't matter, all regions will return the same result.
+        result = re.findall(r'<keyword=([^>]+)>', tooltip)
+        for key in result:
+            keywords.append(key)
+
+        keywords_by_tooltip_id[tooltip_id] = keywords
+    return keywords_by_tooltip_id
+
 class GwentDataHelper:
     def __init__(self, raw_folder):
         self._folder = raw_folder
@@ -47,125 +153,12 @@ class GwentDataHelper:
 
         self.tooltips = {}
         for locale in LOCALES:
-            self.tooltips[locale] = self._get_evaluated_tooltips(raw_tooltips[locale], tooltip_data, self.card_names[locale], card_abilities)
+            self.tooltips[locale] = _get_evaluated_tooltips(raw_tooltips[locale], tooltip_data, self.card_names[locale], card_abilities)
 
         # Can use any locale here, all locales will return the same result.
-        self.keywords = self._get_keywords(self.tooltips[LOCALES[0]])
+        self.keywords = _get_keywords(self.tooltips[LOCALES[0]])
 
-        self.tokens = self._get_tokens(self.card_templates, card_abilities, self.tooltips)
-
-    @staticmethod
-    def _get_evaluated_tooltips(raw_tooltips, tooltip_data, card_names, card_abilities):
-        # Generate complete tooltips from the raw_tooltips and accompanying data.
-        tooltips = {}
-        for tooltip_id in raw_tooltips:
-            # Some cards don't have info.
-            if raw_tooltips.get(tooltip_id) is None or raw_tooltips.get(tooltip_id) == "":
-                tooltips[tooltip_id] = ""
-                continue
-
-            # Set tooltip to be the raw tooltip string.
-            tooltips[tooltip_id] = raw_tooltips[tooltip_id]
-            # Regex. Get all strings that lie between a '{' and '}'.
-            result = re.findall(r'.*?\{(.*?)\}.*?', tooltips[tooltip_id])
-            card_data = tooltip_data.get(tooltip_id)
-            if card_data is None:
-                continue
-            for key in result:
-                for variable in card_data.iter('VariableData'):
-                    data = variable.find(key)
-                    if data is None:
-                        # This is not the right variable for this key, let's check the next one.
-                        continue
-                    if "crd" in key:
-                        # Spawn a specific card.
-                        crd = data.attrib['V']
-                        if crd != "":
-                            tooltips[tooltip_id] = tooltips[tooltip_id]\
-                                .replace("{" + key + "}", card_names[crd])
-                            # We've dealt with this key, move on.
-                            continue
-                    if variable.attrib['key'] == key:
-                        # The value is sometimes given immediately here.
-                        if data.attrib['V'] != "":
-                            tooltips[tooltip_id] = tooltips[tooltip_id]\
-                                .replace("{" + key + "}", data.attrib['V'])
-                        else: # Otherwise we are going to have to look in the ability data to find the value.
-                            ability_id = variable.find(key).attrib['abilityId']
-                            param_name = variable.find(key).attrib['paramName']
-                            ability_value = GwentDataHelper._get_card_ability_value(card_abilities, ability_id, param_name)
-                            if ability_value is not None:
-                                tooltips[tooltip_id] = tooltips[tooltip_id]\
-                                    .replace("{" + key + "}", ability_value)
-
-        return tooltips
-
-    @staticmethod
-    def _get_card_ability_value(card_abilities, ability_id, param_name):
-        ability = card_abilities.get(ability_id)
-        if ability is None:
-            return None
-        if ability.find(param_name) is not None:
-            return ability.find(param_name).attrib['V']
-
-    # If a card is a token of a released card, it has also been released.
-    @staticmethod
-    def _get_tokens(card_templates, card_abilities, tooltips):
-        tokens = {}
-        for card_id in card_templates:
-            template = card_templates[card_id]
-            tokens[card_id] = []
-            for ability in template.iter('Ability'):
-                ability = card_abilities.get(ability.attrib['id'])
-                if ability is None:
-                    continue
-
-                # There are several different ways that a template can be referenced.
-                for template in ability.iter('templateId'):
-                    token_id = template.attrib['V']
-                    token = card_templates.get(token_id)
-                    if _is_token_valid(token, tooltips):
-                        if token_id not in tokens[card_id]:
-                            tokens[card_id].append(token_id)
-
-                for template in ability.iter('TemplatesFromId'):
-                    for token in template.iter('id'):
-                        token_id = token.attrib['V']
-                        token = card_templates.get(token_id)
-                        if _is_token_valid(token, tooltips):
-                            if token_id not in tokens[card_id]:
-                                tokens[card_id].append(token_id)
-
-                for template in ability.iter('TransformTemplate'):
-                    token_id = template.attrib['V']
-                    token = card_templates.get(token_id)
-                    if _is_token_valid(token, tooltips):
-                        if token_id not in tokens[card_id]:
-                            tokens[card_id].append(token_id)
-
-                for template in ability.iter('TemplateId'):
-                    token_id = template.attrib['V']
-                    token = card_templates.get(token_id)
-                    if _is_token_valid(token, tooltips):
-                        if token_id not in tokens[card_id]:
-                            tokens[card_id].append(token_id)
-
-        return tokens
-
-    @staticmethod
-    def _get_keywords(tooltips):
-        keywords_by_tooltip_id = {}
-        for tooltip_id in tooltips:
-            tooltip = tooltips[tooltip_id]
-            keywords = []
-            # Find all keywords in info string. E.g. find 'spawn' in '<keyword=spawn>'
-            # Can just use en-US here. It doesn't matter, all regions will return the same result.
-            result = re.findall(r'<keyword=([^>]+)>', tooltip)
-            for key in result:
-                keywords.append(key)
-
-            keywords_by_tooltip_id[tooltip_id] = keywords
-        return keywords_by_tooltip_id
+        self.tokens = _get_tokens(self.card_templates, card_abilities, self.tooltips)
 
     def get_tooltips_file(self, locale):
         path = self._folder + "tooltips_" + locale + ".csv"
