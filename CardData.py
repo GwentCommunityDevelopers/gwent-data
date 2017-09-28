@@ -77,13 +77,14 @@ CATEGORIES = {
     "Witcher": "Witcher"
 }
 
+# Gaunter's 'Higher than 5' and 'Lower than 5' are not actually cards.
+INVALID_TOKENS = ['200175', '200176']
 
 class CardData:
     def __init__(self, gwent_data_helper):
         self._helper = gwent_data_helper
         self.patch = None
         self.imageUrl = None
-        self.cardTemplates = gwent_data_helper.get_card_templates()
 
     def create_card_json(self, patch):
         self.patch = patch
@@ -91,20 +92,22 @@ class CardData:
         self.imageUrl = "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2F" +\
                         patch + "%2F{0}%2F{1}%2F{2}.png?alt=media"
 
-        card_data = self._create_base_card_json()
+        card_data = self._create_base_card_json(self._helper.card_templates)
 
-        # We have to do this as well to catch cards like Botchling, that are explicitly named in the Baron's tooltip.
-        #self._evaluate_tokens(card_data)
-        self._remove_invalid_images(card_data)
-        self._remove_unreleased_cards(card_data)
+        # Check tokens are correctly marked as released.
+        for card_id in card_data:
+            card = card_data[card_id]
+            if card['released'] and card.get('related') is not None:
+                for token_id in card.get('related'):
+                    card_data[token_id]['released'] = token_id not in INVALID_TOKENS
 
         return card_data
 
-    def _create_base_card_json(self):
+    def _create_base_card_json(self, card_templates):
         cards = {}
 
-        for template_id in self.cardTemplates:
-            template = self.cardTemplates[template_id]
+        for template_id in card_templates:
+            template = card_templates[template_id]
             card = {}
             card['ingameId'] = template.attrib['id']
             card['strength'] = int(template.attrib['power'])
@@ -175,100 +178,17 @@ class CardData:
                 variation['mill'] = MILL_VALUES[variation['rarity']]
 
                 art = {}
-                for image_size in IMAGE_SIZES:
-                    art[image_size] = self.imageUrl.format(card['ingameId'], variation_id, image_size)
+                if collectible:
+                    for image_size in IMAGE_SIZES:
+                        art[image_size] = self.imageUrl.format(card['ingameId'], variation_id, image_size)
                 art['artist'] = definition.find("UnityLinks").find("StandardArt").attrib['author']
                 variation['art'] = art
 
                 card['variations'][variation_id] = variation
 
+            tokens = self._helper.tokens.get(card['ingameId'])
+            card['related'] = tokens
+
             cards[card['ingameId']] = card
 
         return cards
-
-    # If a card is not collectible, we don't have the art for it.
-    @staticmethod
-    def _remove_invalid_images(cards):
-        for card_id in cards:
-            card = cards[card_id]
-            for variation_id in card['variations']:
-                variation = card['variations'][variation_id]
-                if not variation['collectible']:
-                    for size in IMAGE_SIZES:
-                        del variation['art'][size]
-
-    @staticmethod
-    def _remove_unreleased_cards(cards):
-        # A few cards get falsely flagged as released.
-
-        # Gaunter's 'Higher than 5' token
-        cards['200175']['released'] = False
-        # Gaunter's 'Lower than 5' token
-        cards['200176']['released'] = False
-
-    # If a card is a token of a released card, it has also been released.
-    def _evaluate_tokens(self, cards):
-        for card_id in cards:
-            card = cards[card_id]
-            if card['released']:
-                card['related'] = []
-                for ability in self.cardTemplates[card_id].iter('Ability'):
-                    ability = self.abilityData.get(ability.attrib['id'])
-                    if ability is None:
-                        continue
-
-                    # There are several different ways that a template can be referenced.
-                    for template in ability.iter('templateId'):
-                        token_id = template.attrib['V']
-                        token = cards.get(token_id)
-                        if self._is_token_valid(token):
-                            cards.get(token_id)['released'] = True
-                            if token_id not in card['related']:
-                                card['related'].append(token_id)
-
-                    for template in ability.iter('TemplatesFromId'):
-                        for token in template.iter('id'):
-                            token_id = token.attrib['V']
-                            token = cards.get(token_id)
-                            if self._is_token_valid(token):
-                                cards.get(token_id)['released'] = True
-                                if token_id not in card['related']:
-                                    card['related'].append(token_id)
-
-                    for template in ability.iter('TransformTemplate'):
-                        token_id = template.attrib['V']
-                        token = cards.get(token_id)
-                        if self._is_token_valid(token):
-                            cards.get(token_id)['released'] = True
-                            if token_id not in card['related']:
-                                card['related'].append(token_id)
-
-                    for template in ability.iter('TemplateId'):
-                        token_id = template.attrib['V']
-                        token = cards.get(token_id)
-                        if self._is_token_valid(token):
-                            token['released'] = True
-                            if token_id not in card['related']:
-                                card['related'].append(token_id)
-
-                # We may not have added any cards to 'related'.
-                if len(card['related']) == 0:
-                    del card['related']
-
-    @staticmethod
-    def _is_token_valid(token):
-        if token is not None and token.get('info') is not None:
-            valid = True
-            for region in token['info']:
-                if token['info'].get(region) is None or token['info'][region] == '':
-                    valid = False
-            return valid
-        else:
-            return False
-
-    def _get_card_ability_value(self, ability_id, param_name):
-        ability = self.abilityData.get(ability_id)
-        if ability is None:
-            return None
-        if ability.find(param_name) is not None:
-            return ability.find(param_name).attrib['V']

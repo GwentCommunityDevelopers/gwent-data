@@ -20,10 +20,21 @@ def clean_html(raw_html):
     cleantext = re.sub(cleanr, '', raw_html)
     return cleantext
 
+def _is_token_valid(token, tooltips):
+    if token is not None and token.find('Tooltip') is not None:
+        valid = True
+        for locale in LOCALES:
+            tooltip = tooltips[locale].get(token.find('Tooltip').attrib['key'])
+            if tooltip is None or tooltip == '':
+                valid = False
+        return valid
+    else:
+        return False
 
 class GwentDataHelper:
     def __init__(self, raw_folder):
         self._folder = raw_folder
+        self.card_templates = self.get_card_templates()
         raw_tooltips = {}
         self.card_names = {}
         self.flavor_strings = {}
@@ -41,6 +52,8 @@ class GwentDataHelper:
         # Can use any locale here, all locales will return the same result.
         self.keywords = self._get_keywords(self.tooltips[LOCALES[0]])
 
+        self.tokens = self._get_tokens(self.card_templates, card_abilities, self.tooltips)
+
     @staticmethod
     def _get_evaluated_tooltips(raw_tooltips, tooltip_data, card_names, card_abilities):
         # Generate complete tooltips from the raw_tooltips and accompanying data.
@@ -48,6 +61,7 @@ class GwentDataHelper:
         for tooltip_id in raw_tooltips:
             # Some cards don't have info.
             if raw_tooltips.get(tooltip_id) is None or raw_tooltips.get(tooltip_id) == "":
+                tooltips[tooltip_id] = ""
                 continue
 
             # Set tooltip to be the raw tooltip string.
@@ -93,6 +107,50 @@ class GwentDataHelper:
             return None
         if ability.find(param_name) is not None:
             return ability.find(param_name).attrib['V']
+
+    # If a card is a token of a released card, it has also been released.
+    @staticmethod
+    def _get_tokens(card_templates, card_abilities, tooltips):
+        tokens = {}
+        for card_id in card_templates:
+            template = card_templates[card_id]
+            tokens[card_id] = []
+            for ability in template.iter('Ability'):
+                ability = card_abilities.get(ability.attrib['id'])
+                if ability is None:
+                    continue
+
+                # There are several different ways that a template can be referenced.
+                for template in ability.iter('templateId'):
+                    token_id = template.attrib['V']
+                    token = card_templates.get(token_id)
+                    if _is_token_valid(token, tooltips):
+                        if token_id not in tokens[card_id]:
+                            tokens[card_id].append(token_id)
+
+                for template in ability.iter('TemplatesFromId'):
+                    for token in template.iter('id'):
+                        token_id = token.attrib['V']
+                        token = card_templates.get(token_id)
+                        if _is_token_valid(token, tooltips):
+                            if token_id not in tokens[card_id]:
+                                tokens[card_id].append(token_id)
+
+                for template in ability.iter('TransformTemplate'):
+                    token_id = template.attrib['V']
+                    token = card_templates.get(token_id)
+                    if _is_token_valid(token, tooltips):
+                        if token_id not in tokens[card_id]:
+                            tokens[card_id].append(token_id)
+
+                for template in ability.iter('TemplateId'):
+                    token_id = template.attrib['V']
+                    token = card_templates.get(token_id)
+                    if _is_token_valid(token, tooltips):
+                        if token_id not in tokens[card_id]:
+                            tokens[card_id].append(token_id)
+
+        return tokens
 
     @staticmethod
     def _get_keywords(tooltips):
