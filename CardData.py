@@ -116,8 +116,8 @@ class CardData:
     def _create_base_card_json(self):
         cards = {}
 
-        for templateId in self.cardTemplates:
-            template = self.cardTemplates[templateId]
+        for template_id in self.cardTemplates:
+            template = self.cardTemplates[template_id]
             card = {}
             card['ingameId'] = template.attrib['id']
             card['strength'] = int(template.attrib['power'])
@@ -183,8 +183,8 @@ class CardData:
                 variation['mill'] = MILL_VALUES[variation['rarity']]
 
                 art = {}
-                for imageSize in IMAGE_SIZES:
-                    art[imageSize] = self.imageUrl.format(card['ingameId'], variation_id, imageSize)
+                for image_size in IMAGE_SIZES:
+                    art[image_size] = self.imageUrl.format(card['ingameId'], variation_id, image_size)
                 art['artist'] = definition.find("UnityLinks").find("StandardArt").attrib['author']
                 variation['art'] = art
 
@@ -196,17 +196,17 @@ class CardData:
 
     def _evaluate_info_data(self, cards):
         # Now that we have the raw strings, we have to get any values that are missing.
-        for cardId in cards:
+        for card_id in cards:
             for region in GwentUtils.LOCALES:
                 # Some cards don't have info.
-                if cards[cardId].get('info') is None or cards[cardId]['info'] == "":
+                if cards[card_id].get('info') is None or cards[card_id]['info'] == "":
                     continue
 
                 # Set info to be the raw tooltip string.
-                tooltip_id = cards[cardId]['info'][region]
-                cards[cardId]['info'][region] = self.tooltips[region].get(tooltip_id)
+                tooltip_id = cards[card_id]['info'][region]
+                cards[card_id]['info'][region] = self.tooltips[region].get(tooltip_id)
                 # Regex. Get all strings that lie between a '{' and '}'.
-                result = re.findall(r'.*?\{(.*?)\}.*?', cards[cardId]['info'][region])
+                result = re.findall(r'.*?\{(.*?)\}.*?', cards[card_id]['info'][region])
 
                 tooltip = self.tooltipData.get(tooltip_id)
                 for key in result:
@@ -219,30 +219,30 @@ class CardData:
                             # Spawn a specific card.
                             crd = data.attrib['V']
                             if crd != "":
-                                cards[cardId]['info'][region] = cards[cardId]['info'][region]\
+                                cards[card_id]['info'][region] = cards[card_id]['info'][region]\
                                     .replace("{" + key + "}", cards[crd]['name'][region])
                                 # We've dealt with this key, move on.
                                 continue
                         if variable.attrib['key'] == key:
                             # The value is sometimes given immediately here.
                             if data.attrib['V'] != "":
-                                cards[cardId]['info'][region] = cards[cardId]['info'][region]\
+                                cards[card_id]['info'][region] = cards[card_id]['info'][region]\
                                     .replace("{" + key + "}", data.attrib['V'])
                             else: # Otherwise we are going to have to look in the ability data to find the value.
                                 ability_id = variable.find(key).attrib['abilityId']
                                 param_name = variable.find(key).attrib['paramName']
                                 ability_value = self._get_card_ability_value(ability_id, param_name)
                                 if ability_value is not None:
-                                    cards[cardId]['info'][region] = cards[cardId]['info'][region]\
+                                    cards[card_id]['info'][region] = cards[card_id]['info'][region]\
                                         .replace("{" + key + "}", ability_value)
 
-                cards[cardId]['infoRaw'][region] = cards[cardId]['info'][region]
-                cards[cardId]['info'][region] = GwentUtils.clean_html(cards[cardId]['info'][region])
+                cards[card_id]['infoRaw'][region] = cards[card_id]['info'][region]
+                cards[card_id]['info'][region] = GwentUtils.clean_html(cards[card_id]['info'][region])
 
     @staticmethod
     def _evaluate_keywords(cards):
-        for cardId in cards:
-            card = cards[cardId]
+        for card_id in cards:
+            card = cards[card_id]
             if card.get('infoRaw') is None:
                 continue
             card['keywords'] = []
@@ -255,10 +255,10 @@ class CardData:
     # If a card is not collectible, we don't have the art for it.
     @staticmethod
     def _remove_invalid_images(cards):
-        for cardId in cards:
-            card = cards[cardId]
-            for variationId in card['variations']:
-                variation = card['variations'][variationId]
+        for card_id in cards:
+            card = cards[card_id]
+            for variation_id in card['variations']:
+                variation = card['variations'][variation_id]
                 if not variation['collectible']:
                     for size in IMAGE_SIZES:
                         del variation['art'][size]
@@ -274,11 +274,11 @@ class CardData:
 
     # If a card is a token of a released card, it has also been released.
     def _evaluate_tokens(self, cards):
-        for cardId in cards:
-            card = cards[cardId]
+        for card_id in cards:
+            card = cards[card_id]
             if card['released']:
                 card['related'] = []
-                for ability in self.cardTemplates[cardId].iter('Ability'):
+                for ability in self.cardTemplates[card_id].iter('Ability'):
                     ability = self.abilityData.get(ability.attrib['id'])
                     if ability is None:
                         continue
