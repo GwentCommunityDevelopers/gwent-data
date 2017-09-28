@@ -1,14 +1,13 @@
 #!/usr/bin/python3
 import GwentUtils
 
-
 class KeywordData:
-    def __init__(self, gwent_data_helper):
-        self._helper = gwent_data_helper
+    def __init__(self, gwentDataHelper):
+        self._helper = gwentDataHelper
 
-    def create_keyword_json(self):
+    def createKeywordJson(self):
         keywords = {}
         for locale in GwentUtils.LOCALES:
-            keywords[locale] = self._helper.get_keyword_tooltips(locale)
+            keywords[locale] = self._helper.getKeywordTooltips(locale)
 
         return keywords

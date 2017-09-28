@@ -31,14 +31,14 @@ gwentDataHelper = GwentUtils.GwentDataHelper(rawFolder)
 BASE_FILENAME = PATCH + "_" + datetime.utcnow().strftime("%Y-%m-%d") + ".json"
 
 print("Creating keyword JSON...")
-keywordsJson = KeywordData(gwentDataHelper).create_keyword_json()
+keywordsJson = KeywordData(gwentDataHelper).createKeywordJson()
 filename = "keywords_" + BASE_FILENAME
 filepath = os.path.join(rawFolder + "../" + filename)
-GwentUtils.save_json(filepath, keywordsJson)
+GwentUtils.saveJson(filepath, keywordsJson)
 
 print("Creating card data JSON...")
-cardsJson = CardData(gwentDataHelper).create_card_json(PATCH)
+cardsJson = CardData(gwentDataHelper).createCardJson(PATCH)
 filename = "cards_" + BASE_FILENAME
 filepath = os.path.join(rawFolder + "../" + filename)
 print("Found %s cards." % (len(cardsJson)))
-GwentUtils.save_json(filepath, cardsJson)
+GwentUtils.saveJson(filepath, cardsJson)
