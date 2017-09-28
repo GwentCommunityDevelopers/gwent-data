@@ -123,7 +123,7 @@ class GwentDataHelper:
                 # Remove any quotation marks and new lines.
                 card_names[name_id] = split[2].replace("\"", "").replace("\n", "")
 
-                card_name_file.close()
+        card_name_file.close()
         return card_names
 
     def get_flavor_strings(self, locale):
