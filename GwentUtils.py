@@ -7,76 +7,79 @@ import xml.etree.ElementTree as xml
 
 LOCALES = ["en-US", "de-DE", "es-ES", "es-MX", "fr-FR", "it-IT", "ja-JP", "pl-PL", "pt-BR", "ru-RU", "zh-CN", "zh-TW"]
 
-def saveJson(filepath, data):
+
+def save_json(filepath, data):
     print("Saved JSON to: %s" % filepath)
     with open(filepath, "w", encoding="utf-8", newline="\n") as f:
         json.dump(data, f, sort_keys=True, indent=2, separators=(',', ': '))
 
-def cleanHtml(raw_html):
+
+def clean_html(raw_html):
     cleanr = re.compile('<.*?>')
     cleantext = re.sub(cleanr, '', raw_html)
     return cleantext
 
-class GwentDataHelper:
-    def __init__(self, rawFolder):
-        self._folder = rawFolder
 
-    def getTooltipsFile(self, locale):
+class GwentDataHelper:
+    def __init__(self, raw_folder):
+        self._folder = raw_folder
+
+    def get_tooltips_file(self, locale):
         path = self._folder + "tooltips_" + locale + ".csv"
         if not os.path.isfile(path):
             print("Couldn't find " + locale + " tooltips at " + path)
             exit()
         return path
 
-    def getCardTooltips(self, locale):
-        tooltipsFile = open(self.getTooltipsFile(locale), "r")
+    def get_card_tooltips(self, locale):
+        tooltips_file = open(self.get_tooltips_file(locale), "r")
         tooltips = {}
-        for tooltip in tooltipsFile:
+        for tooltip in tooltips_file:
             split = tooltip.split("\";\"")
             if len(split) < 2:
                 continue
-            tooltipId = split[1].replace("tooltip_","").replace("_description","").replace("\"", "").lstrip("0")
+            tooltip_id = split[1].replace("tooltip_", "").replace("_description", "").replace("\"", "").lstrip("0")
 
             # Remove any quotation marks and new lines.
-            tooltips[tooltipId] = split[2].replace("\"\n", "").replace("\\n", "\n")
+            tooltips[tooltip_id] = split[2].replace("\"\n", "").replace("\\n", "\n")
 
-        tooltipsFile.close()
+        tooltips_file.close()
         return tooltips
 
-    def getKeywordTooltips(self, locale):
-        tooltipsFile = open(self.getTooltipsFile(locale), "r")
+    def get_keyword_tooltips(self, locale):
+        tooltips_file = open(self.get_tooltips_file(locale), "r")
         keywords = {}
-        for tooltip in tooltipsFile:
+        for tooltip in tooltips_file:
             split = tooltip.split("\";\"")
             if len(split) < 2 or "keyword" not in split[1]:
                 continue
-            keywordId = split[1].replace("keyword_","").replace("\"", "")
+            keyword_id = split[1].replace("keyword_", "").replace("\"", "")
 
-            keywords[keywordId] = {}
+            keywords[keyword_id] = {}
             # Remove any quotation marks and new lines.
-            keywords[keywordId]['raw'] = split[2].replace("\"", "").replace("\n", "")
-            keywords[keywordId]['unformatted'] = cleanHtml(keywords[keywordId]['raw'])
+            keywords[keyword_id]['raw'] = split[2].replace("\"", "").replace("\n", "")
+            keywords[keyword_id]['unformatted'] = clean_html(keywords[keyword_id]['raw'])
 
-        tooltipsFile.close()
+        tooltips_file.close()
         return keywords
 
-    def getCardTemplates(self):
+    def get_card_templates(self):
         path = self._folder + "GwentCardTemplates.xml"
         if not os.path.isfile(path):
             print("Couldn't find templates.xml at " + path)
             exit()
 
-        cardTemplates = {}
+        card_templates = {}
 
         tree = xml.parse(path)
         root = tree.getroot()
 
         for template in root.iter('CardTemplate'):
-            cardTemplates[template.attrib['id']] = template
+            card_templates[template.attrib['id']] = template
 
-        return cardTemplates
+        return card_templates
 
-    def getCardAbilities(self):
+    def get_card_abilities(self):
         path = self._folder + "GwentCardAbilities.xml"
         if not os.path.isfile(path):
             print("Couldn't find abilities.xml at " + path)
@@ -92,53 +95,53 @@ class GwentDataHelper:
 
         return abilities
 
-    def getTooltipData(self):
+    def get_tooltip_data(self):
         path = self._folder + "GwentTooltips.xml"
         if not os.path.isfile(path):
             print("Couldn't find tooltips.xml at " + path)
             exit()
 
-        tooltipData = {}
+        tooltip_data = {}
 
         tree = xml.parse(path)
         root = tree.getroot()
 
         for tooltip in root.iter('CardTooltip'):
-            tooltipData[tooltip.attrib['id']] = tooltip
+            tooltip_data[tooltip.attrib['id']] = tooltip
 
-        return tooltipData
+        return tooltip_data
 
-    def getCardNames(self, locale):
-        cardNameFile = open(self.getCardNamesFile(locale), "r", encoding="utf8")
-        cardNames = {}
-        for line in cardNameFile:
+    def get_card_names(self, locale):
+        card_name_file = open(self.get_card_names_file(locale), "r", encoding="utf8")
+        card_names = {}
+        for line in card_name_file:
             split = line.split(";")
             if len(split) < 2:
                 continue
             if "_name" in split[1]:
-                nameId = split[1].replace("_name", "").replace("\"", "")
+                name_id = split[1].replace("_name", "").replace("\"", "")
                 # Remove any quotation marks and new lines.
-                cardNames[nameId] = split[2].replace("\"", "").replace("\n", "")
+                card_names[name_id] = split[2].replace("\"", "").replace("\n", "")
 
-        cardNameFile.close()
-        return cardNames
+        card_name_file.close()
+        return card_names
 
-    def getFlavorStrings(self, locale):
-        cardNameFile = open(self.getCardNamesFile(locale), "r", encoding="utf8")
-        flavorStrings = {}
-        for line in cardNameFile:
+    def get_flavor_strings(self, locale):
+        card_name_file = open(self.get_card_names_file(locale), "r", encoding="utf8")
+        flavor_strings = {}
+        for line in card_name_file:
             split = line.split(";")
             if len(split) < 2:
                 continue
             if "_fluff" in split[1]:
-                flavorId = split[1].replace("_fluff", "").replace("\"", "")
+                flavor_id = split[1].replace("_fluff", "").replace("\"", "")
                 # Remove any quotation marks and new lines.
-                flavorStrings[flavorId] = split[2].replace("\"", "").replace("\n", "")
+                flavor_strings[flavor_id] = split[2].replace("\"", "").replace("\n", "")
 
-        cardNameFile.close()
-        return flavorStrings
+        card_name_file.close()
+        return flavor_strings
 
-    def getCardNamesFile(self, locale):
+    def get_card_names_file(self, locale):
         path = self._folder + "cards_" + locale + ".csv"
         if not os.path.isfile(path):
             print("Couldn't find " + locale + " card file at " + path)

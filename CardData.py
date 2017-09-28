@@ -77,44 +77,47 @@ CATEGORIES = {
     "Witcher": "Witcher"
 }
 
+
 class CardData:
-    def __init__(self, gwentDataHelper):
-        self._helper = gwentDataHelper
-        self.cardTemplates = self._helper.getCardTemplates()
-        self.tooltipData = self._helper.getTooltipData()
-        self.abilityData = self._helper.getCardAbilities()
+    def __init__(self, gwent_data_helper):
+        self.patch = None
+        self.imageUrl = None
+        self.cardTemplates = gwent_data_helper.get_card_templates()
+        self.tooltipData = gwent_data_helper.get_tooltip_data()
+        self.abilityData = gwent_data_helper.get_card_abilities()
         self.cardNames = {}
         self.tooltips = {}
         self.flavorStrings = {}
 
         for locale in GwentUtils.LOCALES:
-            self.cardNames[locale] = self._helper.getCardNames(locale)
-            self.tooltips[locale] = self._helper.getCardTooltips(locale)
-            self.flavorStrings[locale] = self._helper.getFlavorStrings(locale)
+            self.cardNames[locale] = gwent_data_helper.get_card_names(locale)
+            self.tooltips[locale] = gwent_data_helper.get_card_tooltips(locale)
+            self.flavorStrings[locale] = gwent_data_helper.get_flavor_strings(locale)
 
-    def createCardJson(self, patch):
+    def create_card_json(self, patch):
         self.patch = patch
         # Replace with these values {0} : card id, {1} : variation id, {0} : image size
-        self.imageUrl = "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2F" + patch + "%2F{0}%2F{1}%2F{2}.png?alt=media"
+        self.imageUrl = "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2F" +\
+                        patch + "%2F{0}%2F{1}%2F{2}.png?alt=media"
 
-        cardData = self._createBaseCardJson()
+        card_data = self._create_base_card_json()
 
         # Requires information about other cards, so needs to be done after we have looked at every card.
-        self._evaluateInfoData(cardData)
+        self._evaluate_info_data(card_data)
         # We have to do this as well to catch cards like Botchling, that are explicitly named in the Baron's tooltip.
-        self._evaluateTokens(cardData)
+        self._evaluate_tokens(card_data)
         # After the info text has been evaluated, we can extract the keywords (e.g. deploy).
-        self._evaluateKeywords(cardData)
-        self._removeInvalidImages(cardData)
-        self._removeUnreleasedCards(cardData)
+        self._evaluate_keywords(card_data)
+        self._remove_invalid_images(card_data)
+        self._remove_unreleased_cards(card_data)
 
-        return cardData
+        return card_data
 
-    def _createBaseCardJson(self):
+    def _create_base_card_json(self):
         cards = {}
 
-        for templateId in self.cardTemplates:
-            template = self.cardTemplates[templateId]
+        for template_id in self.cardTemplates:
+            template = self.cardTemplates[template_id]
             card = {}
             card['ingameId'] = template.attrib['id']
             card['strength'] = int(template.attrib['power'])
@@ -135,7 +138,7 @@ class CardData:
             # False by default, will be set to true if collectible or is a token of a released card.
             card['released'] = False
 
-            if (template.find('Tooltip') != None):
+            if template.find('Tooltip') is not None:
                 card['info'] = {}
                 card['infoRaw'] = {}
                 for region in GwentUtils.LOCALES:
@@ -163,9 +166,9 @@ class CardData:
 
             for definition in template.find('CardDefinitions').findall('CardDefinition'):
                 variation = {}
-                variationId = definition.attrib['id']
+                variation_id = definition.attrib['id']
 
-                variation['variationId'] = variationId
+                variation['variationId'] = variation_id
                 variation['availability'] = definition.find('Availability').attrib['V']
                 collectible = variation['availability'] == "BaseSet"
                 variation['collectible'] = collectible
@@ -180,63 +183,67 @@ class CardData:
                 variation['mill'] = MILL_VALUES[variation['rarity']]
 
                 art = {}
-                for imageSize in IMAGE_SIZES:
-                    art[imageSize] = self.imageUrl.format(card['ingameId'], variationId, imageSize)
+                for image_size in IMAGE_SIZES:
+                    art[image_size] = self.imageUrl.format(card['ingameId'], variation_id, image_size)
                 art['artist'] = definition.find("UnityLinks").find("StandardArt").attrib['author']
                 variation['art'] = art
 
-                card['variations'][variationId] = variation
+                card['variations'][variation_id] = variation
 
             cards[card['ingameId']] = card
 
         return cards
 
-    def _evaluateInfoData(self, cards):
+    def _evaluate_info_data(self, cards):
         # Now that we have the raw strings, we have to get any values that are missing.
-        for cardId in cards:
-            defaultEvaluated = False
+        for card_id in cards:
             for region in GwentUtils.LOCALES:
                 # Some cards don't have info.
-                if cards[cardId].get('info') == None or cards[cardId]['info'] == "":
+                if cards[card_id].get('info') is None or cards[card_id]['info'] == "":
                     continue
 
                 # Set info to be the raw tooltip string.
-                tooltipId = cards[cardId]['info'][region]
-                cards[cardId]['info'][region] = self.tooltips[region].get(tooltipId)
-                result = re.findall(r'.*?\{(.*?)\}.*?', cards[cardId]['info'][region]) # Regex. Get all strings that lie between a '{' and '}'.
+                tooltip_id = cards[card_id]['info'][region]
+                cards[card_id]['info'][region] = self.tooltips[region].get(tooltip_id)
+                # Regex. Get all strings that lie between a '{' and '}'.
+                result = re.findall(r'.*?\{(.*?)\}.*?', cards[card_id]['info'][region])
 
-                tooltip = self.tooltipData.get(tooltipId)
+                tooltip = self.tooltipData.get(tooltip_id)
                 for key in result:
                     for variable in tooltip.iter('VariableData'):
                         data = variable.find(key)
-                        if data == None:
+                        if data is None:
                             # This is not the right variable for this key, let's check the next one.
                             continue
                         if "crd" in key:
                             # Spawn a specific card.
                             crd = data.attrib['V']
                             if crd != "":
-                                cards[cardId]['info'][region] = cards[cardId]['info'][region].replace("{" + key + "}", cards[crd]['name'][region])
+                                cards[card_id]['info'][region] = cards[card_id]['info'][region]\
+                                    .replace("{" + key + "}", cards[crd]['name'][region])
                                 # We've dealt with this key, move on.
                                 continue
                         if variable.attrib['key'] == key:
                             # The value is sometimes given immediately here.
                             if data.attrib['V'] != "":
-                                cards[cardId]['info'][region] = cards[cardId]['info'][region].replace("{" + key + "}", data.attrib['V'])
+                                cards[card_id]['info'][region] = cards[card_id]['info'][region]\
+                                    .replace("{" + key + "}", data.attrib['V'])
                             else: # Otherwise we are going to have to look in the ability data to find the value.
-                                abilityId = variable.find(key).attrib['abilityId']
-                                paramName = variable.find(key).attrib['paramName']
-                                abilityValue = self._getCardAbilityValue(abilityId, paramName)
-                                if abilityValue != None:
-                                    cards[cardId]['info'][region] = cards[cardId]['info'][region].replace("{" + key + "}", abilityValue)
+                                ability_id = variable.find(key).attrib['abilityId']
+                                param_name = variable.find(key).attrib['paramName']
+                                ability_value = self._get_card_ability_value(ability_id, param_name)
+                                if ability_value is not None:
+                                    cards[card_id]['info'][region] = cards[card_id]['info'][region]\
+                                        .replace("{" + key + "}", ability_value)
 
-                cards[cardId]['infoRaw'][region] = cards[cardId]['info'][region]
-                cards[cardId]['info'][region] = GwentUtils.cleanHtml(cards[cardId]['info'][region])
+                cards[card_id]['infoRaw'][region] = cards[card_id]['info'][region]
+                cards[card_id]['info'][region] = GwentUtils.clean_html(cards[card_id]['info'][region])
 
-    def _evaluateKeywords(self, cards):
-        for cardId in cards:
-            card = cards[cardId]
-            if card.get('infoRaw') == None:
+    @staticmethod
+    def _evaluate_keywords(cards):
+        for card_id in cards:
+            card = cards[card_id]
+            if card.get('infoRaw') is None:
                 continue
             card['keywords'] = []
             # Find all keywords in info string. E.g. find 'spawn' in '<keyword=spawn>'
@@ -246,16 +253,18 @@ class CardData:
                 card['keywords'].append(key)
 
     # If a card is not collectible, we don't have the art for it.
-    def _removeInvalidImages(self, cards):
-        for cardId in cards:
-            card = cards[cardId]
-            for variationId in card['variations']:
-                variation = card['variations'][variationId]
+    @staticmethod
+    def _remove_invalid_images(cards):
+        for card_id in cards:
+            card = cards[card_id]
+            for variation_id in card['variations']:
+                variation = card['variations'][variation_id]
                 if not variation['collectible']:
                     for size in IMAGE_SIZES:
                         del variation['art'][size]
 
-    def _removeUnreleasedCards(self, cards):
+    @staticmethod
+    def _remove_unreleased_cards(cards):
         # A few cards get falsely flagged as released.
 
         # Gaunter's 'Higher than 5' token
@@ -264,67 +273,68 @@ class CardData:
         cards['200176']['released'] = False
 
     # If a card is a token of a released card, it has also been released.
-    def _evaluateTokens(self, cards):
-        for cardId in cards:
-            card = cards[cardId]
+    def _evaluate_tokens(self, cards):
+        for card_id in cards:
+            card = cards[card_id]
             if card['released']:
                 card['related'] = []
-                for ability in self.cardTemplates[cardId].iter('Ability'):
+                for ability in self.cardTemplates[card_id].iter('Ability'):
                     ability = self.abilityData.get(ability.attrib['id'])
-                    if ability == None:
+                    if ability is None:
                         continue
 
                     # There are several different ways that a template can be referenced.
                     for template in ability.iter('templateId'):
-                        tokenId = template.attrib['V']
-                        token = cards.get(tokenId)
-                        if self._isTokenValid(token):
-                            cards.get(tokenId)['released'] = True
-                            if tokenId not in card['related']:
-                                card['related'].append(tokenId)
+                        token_id = template.attrib['V']
+                        token = cards.get(token_id)
+                        if self._is_token_valid(token):
+                            cards.get(token_id)['released'] = True
+                            if token_id not in card['related']:
+                                card['related'].append(token_id)
 
                     for template in ability.iter('TemplatesFromId'):
                         for token in template.iter('id'):
-                            tokenId = token.attrib['V']
-                            token = cards.get(tokenId)
-                            if self._isTokenValid(token):
-                                cards.get(tokenId)['released'] = True
-                                if tokenId not in card['related']:
-                                    card['related'].append(tokenId)
+                            token_id = token.attrib['V']
+                            token = cards.get(token_id)
+                            if self._is_token_valid(token):
+                                cards.get(token_id)['released'] = True
+                                if token_id not in card['related']:
+                                    card['related'].append(token_id)
 
                     for template in ability.iter('TransformTemplate'):
-                        tokenId = template.attrib['V']
-                        token = cards.get(tokenId)
-                        if self._isTokenValid(token):
-                            cards.get(tokenId)['released'] = True
-                            if tokenId not in card['related']:
-                                card['related'].append(tokenId)
+                        token_id = template.attrib['V']
+                        token = cards.get(token_id)
+                        if self._is_token_valid(token):
+                            cards.get(token_id)['released'] = True
+                            if token_id not in card['related']:
+                                card['related'].append(token_id)
 
                     for template in ability.iter('TemplateId'):
-                        tokenId = template.attrib['V']
-                        token = cards.get(tokenId)
-                        if self._isTokenValid(token):
+                        token_id = template.attrib['V']
+                        token = cards.get(token_id)
+                        if self._is_token_valid(token):
                             token['released'] = True
-                            if tokenId not in card['related']:
-                                card['related'].append(tokenId)
+                            if token_id not in card['related']:
+                                card['related'].append(token_id)
 
                 # We may not have added any cards to 'related'.
                 if len(card['related']) == 0:
                     del card['related']
 
-    def _isTokenValid(self, token):
-        if token != None and token.get('info') != None:
+    @staticmethod
+    def _is_token_valid(token):
+        if token is not None and token.get('info') is not None:
             valid = True
             for region in token['info']:
-                if token['info'].get(region) == None or token['info'][region] == '':
+                if token['info'].get(region) is None or token['info'][region] == '':
                     valid = False
             return valid
         else:
             return False
 
-    def _getCardAbilityValue(self, abilityId, paramName):
-        ability = self.abilityData.get(abilityId)
-        if ability == None:
+    def _get_card_ability_value(self, ability_id, param_name):
+        ability = self.abilityData.get(ability_id)
+        if ability is None:
             return None
-        if ability.find(paramName) != None:
-            return ability.find(paramName).attrib['V']
+        if ability.find(param_name) is not None:
+            return ability.find(param_name).attrib['V']
