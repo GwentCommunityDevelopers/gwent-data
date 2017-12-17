@@ -80,6 +80,7 @@ CATEGORIES = {
 # Gaunter's 'Higher than 5' and 'Lower than 5' are not actually cards.
 INVALID_TOKENS = ['200175', '200176']
 
+
 def create_card_json(gwent_data_helper, patch):
     # Replace with these values {0} : card id, {1} : variation id, {0} : image size
     imageUrl = "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2F" +\

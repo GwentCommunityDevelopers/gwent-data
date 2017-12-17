@@ -8,15 +8,18 @@ from pprint import pprint
 
 LOCALES = ["en-US", "de-DE", "es-ES", "es-MX", "fr-FR", "it-IT", "ja-JP", "pl-PL", "pt-BR", "ru-RU", "zh-CN", "zh-TW"]
 
+
 def save_json(filepath, data):
     print("Saved JSON to: %s" % filepath)
     with open(filepath, "w", encoding="utf-8", newline="\n") as f:
         json.dump(data, f, sort_keys=True, indent=2, separators=(',', ': '))
 
+
 def clean_html(raw_html):
     cleanr = re.compile('<.*?>')
     cleantext = re.sub(cleanr, '', raw_html)
     return cleantext
+
 
 def _is_token_valid(token, tooltips):
     if token is not None and token.find('Tooltip') is not None:
@@ -28,6 +31,7 @@ def _is_token_valid(token, tooltips):
         return valid
     else:
         return False
+
 
 def _get_evaluated_tooltips(raw_tooltips, tooltip_data, card_names, card_abilities):
     # Generate complete tooltips from the raw_tooltips and accompanying data.
@@ -74,12 +78,14 @@ def _get_evaluated_tooltips(raw_tooltips, tooltip_data, card_names, card_abiliti
 
     return tooltips
 
+
 def _get_card_ability_value(card_abilities, ability_id, param_name):
     ability = card_abilities.get(ability_id)
     if ability is None:
         return None
     if ability.find(param_name) is not None:
         return ability.find(param_name).attrib['V']
+
 
 def _get_tokens(card_templates, card_abilities, tooltips):
     tokens = {}
@@ -123,6 +129,7 @@ def _get_tokens(card_templates, card_abilities, tooltips):
 
     return tokens
 
+
 def _get_keywords(tooltips):
     keywords_by_tooltip_id = {}
     for tooltip_id in tooltips:
@@ -136,6 +143,7 @@ def _get_keywords(tooltips):
 
         keywords_by_tooltip_id[tooltip_id] = keywords
     return keywords_by_tooltip_id
+
 
 class GwentDataHelper:
     def __init__(self, raw_folder):
@@ -168,7 +176,7 @@ class GwentDataHelper:
         return path
 
     def get_card_tooltips(self, locale):
-        tooltips_file = open(self.get_tooltips_file(locale), "r")
+        tooltips_file = open(self.get_tooltips_file(locale), "r", encoding="utf-8")
         tooltips = {}
         for tooltip in tooltips_file:
             split = tooltip.split("\";\"")
@@ -183,7 +191,7 @@ class GwentDataHelper:
         return tooltips
 
     def get_keyword_tooltips(self, locale):
-        tooltips_file = open(self.get_tooltips_file(locale), "r")
+        tooltips_file = open(self.get_tooltips_file(locale), "r", encoding="utf-8")
         keywords = {}
         for tooltip in tooltips_file:
             split = tooltip.split("\";\"")
