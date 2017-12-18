@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import GwentUtils
 
+
 def create_keyword_json(gwent_data_helper):
     keywords = {}
     for locale in GwentUtils.LOCALES:
