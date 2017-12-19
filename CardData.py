@@ -5,16 +5,20 @@ import GwentUtils
 IMAGE_SIZES = ['original', 'high', 'medium', 'low', 'thumbnail']
 
 CRAFT_VALUES = {}
-CRAFT_VALUES['Common'] = {"standard": 30, "premium": 200, "upgrade": 100}
-CRAFT_VALUES['Rare'] = {"standard": 80, "premium": 400, "upgrade": 200}
-CRAFT_VALUES['Epic'] = {"standard": 200, "premium": 800, "upgrade": 300}
-CRAFT_VALUES['Legendary'] = {"standard": 800, "premium": 1600, "upgrade": 400}
+CRAFT_VALUES[1] = {"standard": 30, "premium": 200, "upgrade": 100}
+CRAFT_VALUES[2] = {"standard": 80, "premium": 400, "upgrade": 200}
+CRAFT_VALUES[4] = {"standard": 200, "premium": 800, "upgrade": 300}
+CRAFT_VALUES[8] = {"standard": 800, "premium": 1600, "upgrade": 400}
 
 MILL_VALUES = {}
-MILL_VALUES['Common'] = {"standard": 10, "premium": 10, "upgrade": 20}
-MILL_VALUES['Rare'] = {"standard": 20, "premium": 20, "upgrade": 50}
-MILL_VALUES['Epic'] = {"standard": 50, "premium": 50, "upgrade": 80}
-MILL_VALUES['Legendary'] = {"standard": 200, "premium": 200, "upgrade": 120}
+MILL_VALUES[1] = {"standard": 10, "premium": 10, "upgrade": 20}
+MILL_VALUES[2] = {"standard": 20, "premium": 20, "upgrade": 50}
+MILL_VALUES[4] = {"standard": 50, "premium": 50, "upgrade": 80}
+MILL_VALUES[8] = {"standard": 200, "premium": 200, "upgrade": 120}
+
+RARITIES = { 1: "Common", 2: "Rare", 4: "Epic", 8: "Legendary"}
+TYPES = { 1: "Leader", 2: "Bronze", 4: "Silver", 8: "Gold"}
+FACTIONS = { 1: "Neutral", 2: "Monster", 4: "Nilfgaard", 8: "Northern Realms", 16: "Scoiatael", 32: "Skellige"}
 
 CATEGORIES = {
     "Aedirn": "Aedirn",
@@ -92,79 +96,71 @@ def create_card_json(gwent_data_helper, patch):
     for template_id in card_templates:
         template = card_templates[template_id]
         card = {}
-        card['ingameId'] = template.attrib['id']
-        card['strength'] = int(template.attrib['power'])
-        card['type'] = template.attrib['group']
-        card['faction'] = template.attrib['factionId'].replace("NorthernKingdom", "Northern Realms")
-
-        key = template.attrib['dbgStr'].lower().replace(" ", "_").replace("'", "")
-        # Remove any underscores from the end.
-        if key[-1] == "_":
-            key = key[:-1]
+        card_id = template.attrib['Id']
+        card['ingameId'] = card_id
+        card['strength'] = int(template.find('Power').text)
+        card['type'] = TYPES.get(int(template.find('Tier').text))
+        card['faction'] = FACTIONS.get(int(template.find('FactionId').text))
 
         card['name'] = {}
         card['flavor'] = {}
         for region in GwentUtils.LOCALES:
-            card['name'][region] = gwent_data_helper.card_names.get(region).get(key)
-            card['flavor'][region] = gwent_data_helper.flavor_strings.get(region).get(key)
+            card['name'][region] = gwent_data_helper.card_names.get(region).get(card_id)
+            card['flavor'][region] = gwent_data_helper.flavor_strings.get(region).get(card_id)
 
         # False by default, will be set to true if collectible or is a token of a released card.
         card['released'] = False
 
-        if template.find('Tooltip') is not None:
-            tooltip_id = template.find('Tooltip').attrib['key']
-            card['info'] = {}
-            card['infoRaw'] = {}
-            for locale in GwentUtils.LOCALES:
-                tooltip = gwent_data_helper.tooltips[locale].get(tooltip_id)
-                if tooltip is not None:
-                    card['infoRaw'][locale] = tooltip
-                    card['info'][locale] = GwentUtils.clean_html(tooltip)
+        card['info'] = {}
+        card['infoRaw'] = {}
+        for locale in GwentUtils.LOCALES:
+            tooltip = gwent_data_helper.tooltips[locale].get(card_id)
+            if tooltip is not None:
+                card['infoRaw'][locale] = tooltip
+                card['info'][locale] = GwentUtils.clean_html(tooltip)
 
-            card['keywords'] = gwent_data_helper.keywords.get(tooltip_id)
+        card['keywords'] = gwent_data_helper.keywords.get(card_id)
 
-        card['positions'] = []
+        card['positions'] = ["Melee", "Ranged", "Siege"]
         card['loyalties'] = []
-        for flag in template.iter('flag'):
-            key = flag.attrib['name']
-
-            if key == "Loyal" or key == "Disloyal":
-                card['loyalties'].append(key)
-
-            if key == "Melee" or key == "Ranged" or key == "Siege" or key == "Event":
-                card['positions'].append(key)
+        placement = template.find('Placement')
+        if placement.attrib['PlayerSide'] != "0":
+            card['loyalties'].append("Loyal")
+        if placement.attrib['OpponentSide'] != "0":
+            card['loyalties'].append("Disloyal")
 
         card['categories'] = []
-        for flag in template.iter('Category'):
-            key = flag.attrib['id']
-            if key in CATEGORIES:
-                card['categories'].append(CATEGORIES.get(key))
 
         card['variations'] = {}
-
-        for definition in template.find('CardDefinitions').findall('CardDefinition'):
+        for x in range(1):
             variation = {}
-            variation_id = definition.attrib['id']
+            variation_id = card_id + "00" # Old variation id format.
+
+            availability = int(template.attrib['Availability'])
+            if availability == 1:
+                variation['availability'] = "BaseSet"
+            else:
+                variation['availability'] = "NonOwnable"
 
             variation['variationId'] = variation_id
-            variation['availability'] = definition.find('Availability').attrib['V']
-            collectible = variation['availability'] == "BaseSet"
+
+            collectible = availability == 1
             variation['collectible'] = collectible
 
             # If a card is collectible, we know it has been released.
             if collectible:
                 card['released'] = True
 
-            variation['rarity'] = definition.find('Rarity').attrib['V']
+            rarity = int(template.find('Rarity').text)
+            variation['rarity'] = RARITIES.get(rarity)
 
-            variation['craft'] = CRAFT_VALUES[variation['rarity']]
-            variation['mill'] = MILL_VALUES[variation['rarity']]
+            variation['craft'] = CRAFT_VALUES.get(rarity)
+            variation['mill'] = MILL_VALUES.get(rarity)
 
             art = {}
             if collectible:
                 for image_size in IMAGE_SIZES:
                     art[image_size] = imageUrl.format(card['ingameId'], variation_id, image_size)
-            art['artist'] = definition.find("UnityLinks").find("StandardArt").attrib['author']
             variation['art'] = art
 
             card['variations'][variation_id] = variation
@@ -172,13 +168,14 @@ def create_card_json(gwent_data_helper, patch):
         tokens = gwent_data_helper.tokens.get(card['ingameId'])
         card['related'] = tokens
 
-        cards[card['ingameId']] = card
+        cards[card_id] = card
 
     # Check tokens are correctly marked as released.
     for card_id in cards:
         card = cards[card_id]
         if card['released'] and card.get('related') is not None:
             for token_id in card.get('related'):
-                cards[token_id]['released'] = token_id not in INVALID_TOKENS
+                if token_id in cards:
+                    cards[token_id]['released'] = token_id not in INVALID_TOKENS
 
     return cards

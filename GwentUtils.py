@@ -6,7 +6,22 @@ import os
 import xml.etree.ElementTree as xml
 from pprint import pprint
 
-LOCALES = ["en-US", "de-DE", "es-ES", "es-MX", "fr-FR", "it-IT", "ja-JP", "pl-PL", "pt-BR", "ru-RU", "zh-CN", "zh-TW"]
+LOCALES = ["en-US", "de-DE", "es-ES", "es-MX", "fr-FR", "it-IT", "ja-JP", "ko-KR", "pl-PL", "pt-BR", "ru-RU", "zh-CN", "zh-TW"]
+LOCALISATION_FILE_NAMES = {
+    "en-US": "en_us.csv",
+    "de-DE": "de_de.csv",
+    "es-ES": "es_es.csv",
+    "es-MX": "es_mx.csv",
+    "fr-FR": "en_us.csv",
+    "it-IT": "en_us.csv",
+    "ja-JP": "jp_jp.csv",
+    "ko-KR": "kr_kr.csv",
+    "pl-PL": "pl_pl.csv",
+    "pt-BR": "pt_br.csv",
+    "ru-RU": "ru_ru.csv",
+    "zh-CN": "zh_cn.csv",
+    "zh-TW": "zh_tw.csv"
+}
 
 
 def save_json(filepath, data):
@@ -33,100 +48,63 @@ def _is_token_valid(token, tooltips):
         return False
 
 
+<<<<<<< HEAD
 def _get_evaluated_tooltips(raw_tooltips, tooltip_data, card_names, card_abilities):
+=======
+def _get_evaluated_tooltips(raw_tooltips, card_names, card_abilities):
+>>>>>>> 4971500... Updated script to habdle the new Gwent data format
     # Generate complete tooltips from the raw_tooltips and accompanying data.
     tooltips = {}
-    for tooltip_id in raw_tooltips:
+    for card_id in raw_tooltips:
         # Some cards don't have info.
-        if raw_tooltips.get(tooltip_id) is None or raw_tooltips.get(tooltip_id) == "":
-            tooltips[tooltip_id] = ""
+        if raw_tooltips.get(card_id) is None or raw_tooltips.get(card_id) == "":
+            tooltips[card_id] = ""
             continue
 
         # Set tooltip to be the raw tooltip string.
-        tooltips[tooltip_id] = raw_tooltips[tooltip_id]
+        tooltips[card_id] = raw_tooltips[card_id]
         # Regex. Get all strings that lie between a '{' and '}'.
-        result = re.findall(r'.*?\{(.*?)\}.*?', tooltips[tooltip_id])
-        card_data = tooltip_data.get(tooltip_id)
-        if card_data is None:
-            continue
+        result = re.findall(r'.*?\{(.*?)\}.*?', tooltips[card_id])
         for key in result:
-            for variable in card_data.iter('VariableData'):
-                data = variable.find(key)
-                if data is None:
-                    # This is not the right variable for this key, let's check the next one.
-                    continue
-                if "crd" in key:
-                    # Spawn a specific card.
-                    crd = data.attrib['V']
-                    if crd != "":
-                        tooltips[tooltip_id] = tooltips[tooltip_id]\
-                            .replace("{" + key + "}", card_names[crd])
-                        # We've dealt with this key, move on.
-                        continue
-                if variable.attrib['key'] == key:
-                    # The value is sometimes given immediately here.
-                    if data.attrib['V'] != "":
-                        tooltips[tooltip_id] = tooltips[tooltip_id]\
-                            .replace("{" + key + "}", data.attrib['V'])
-                    else: # Otherwise we are going to have to look in the ability data to find the value.
-                        ability_id = variable.find(key).attrib['abilityId']
-                        param_name = variable.find(key).attrib['paramName']
-                        ability_value = _get_card_ability_value(card_abilities, ability_id, param_name)
-                        if ability_value is not None:
-                            tooltips[tooltip_id] = tooltips[tooltip_id]\
-                                .replace("{" + key + "}", ability_value)
+            ability_value = _get_card_ability_value(card_abilities, card_id, key)
+            if ability_value is not None:
+                tooltips[card_id] = tooltips[card_id].replace("{" + key + "}", ability_value)
 
     return tooltips
 
+<<<<<<< HEAD
 
 def _get_card_ability_value(card_abilities, ability_id, param_name):
     ability = card_abilities.get(ability_id)
+=======
+def _get_card_ability_value(card_abilities, card_id, key):
+    ability = card_abilities.get(card_id)
+>>>>>>> 4971500... Updated script to habdle the new Gwent data format
     if ability is None:
         return None
-    if ability.find(param_name) is not None:
-        return ability.find(param_name).attrib['V']
+    ability_data = ability.find('TemporaryVariables')
+    if ability_data is not None:
+        for value in ability_data:
+            if value.attrib['Name'] == key:
+                return value.attrib['V']
 
+<<<<<<< HEAD
 
 def _get_tokens(card_templates, card_abilities, tooltips):
+=======
+def _get_tokens(card_templates, card_abilities):
+>>>>>>> 4971500... Updated script to habdle the new Gwent data format
     tokens = {}
     for card_id in card_templates:
-        template = card_templates[card_id]
         tokens[card_id] = []
-        for ability in template.iter('Ability'):
-            ability = card_abilities.get(ability.attrib['id'])
-            if ability is None:
-                continue
-
-            # There are several different ways that a template can be referenced.
-            for template in ability.iter('templateId'):
-                token_id = template.attrib['V']
-                token = card_templates.get(token_id)
-                if _is_token_valid(token, tooltips):
-                    if token_id not in tokens[card_id]:
-                        tokens[card_id].append(token_id)
-
-            for template in ability.iter('TemplatesFromId'):
-                for token in template.iter('id'):
-                    token_id = token.attrib['V']
-                    token = card_templates.get(token_id)
-                    if _is_token_valid(token, tooltips):
-                        if token_id not in tokens[card_id]:
-                            tokens[card_id].append(token_id)
-
-            for template in ability.iter('TransformTemplate'):
-                token_id = template.attrib['V']
-                token = card_templates.get(token_id)
-                if _is_token_valid(token, tooltips):
-                    if token_id not in tokens[card_id]:
-                        tokens[card_id].append(token_id)
-
-            for template in ability.iter('TemplateId'):
-                token_id = template.attrib['V']
-                token = card_templates.get(token_id)
-                if _is_token_valid(token, tooltips):
-                    if token_id not in tokens[card_id]:
-                        tokens[card_id].append(token_id)
-
+        ability = card_abilities.get(card_id)
+        if ability is None:
+            continue
+        ability_data = ability.find('TemporaryVariables')
+        if ability_data is not None:
+            for value in ability_data.iter("V"):
+                if value.attrib.get('Type') == "CardDefinition":
+                    tokens[card_id].append(value.attrib['TemplateId'])
     return tokens
 
 
@@ -156,20 +134,19 @@ class GwentDataHelper:
             raw_tooltips[locale] = self.get_card_tooltips(locale)
             self.card_names[locale] = self.get_card_names(locale)
             self.flavor_strings[locale] = self.get_flavor_strings(locale)
-        tooltip_data = self.get_tooltip_data()
         card_abilities = self.get_card_abilities()
 
         self.tooltips = {}
         for locale in LOCALES:
-            self.tooltips[locale] = _get_evaluated_tooltips(raw_tooltips[locale], tooltip_data, self.card_names[locale], card_abilities)
+            self.tooltips[locale] = _get_evaluated_tooltips(raw_tooltips[locale], self.card_names[locale], card_abilities)
 
         # Can use any locale here, all locales will return the same result.
         self.keywords = _get_keywords(self.tooltips[LOCALES[0]])
 
-        self.tokens = _get_tokens(self.card_templates, card_abilities, self.tooltips)
+        self.tokens = _get_tokens(self.card_templates, card_abilities)
 
     def get_tooltips_file(self, locale):
-        path = self._folder + "tooltips_" + locale + ".csv"
+        path = self._folder + LOCALISATION_FILE_NAMES[locale]
         if not os.path.isfile(path):
             print("Couldn't find " + locale + " tooltips at " + path)
             exit()
@@ -180,9 +157,9 @@ class GwentDataHelper:
         tooltips = {}
         for tooltip in tooltips_file:
             split = tooltip.split("\";\"")
-            if len(split) < 2 or "tooltip" not in split[1]:
+            if len(split) < 3 or "tooltip" not in split[0]:
                 continue
-            tooltip_id = split[1].replace("tooltip_", "").replace("_description", "").replace("\"", "").lstrip("0")
+            tooltip_id = split[1].replace("_tooltip", "").replace("\"", "").lstrip("0")
 
             # Remove any quotation marks and new lines.
             tooltips[tooltip_id] = split[2].replace("\"\n", "").replace("\\n", "\n")
@@ -207,7 +184,7 @@ class GwentDataHelper:
         return keywords
 
     def get_card_templates(self):
-        path = self._folder + "GwentCardTemplates.xml"
+        path = self._folder + "Templates.xml"
         if not os.path.isfile(path):
             print("Couldn't find templates.xml at " + path)
             exit()
@@ -217,13 +194,13 @@ class GwentDataHelper:
         tree = xml.parse(path)
         root = tree.getroot()
 
-        for template in root.iter('CardTemplate'):
-            card_templates[template.attrib['id']] = template
+        for template in root.iter('Template'):
+            card_templates[template.attrib['Id']] = template
 
         return card_templates
 
     def get_card_abilities(self):
-        path = self._folder + "GwentCardAbilities.xml"
+        path = self._folder + "Abilities.xml"
         if not os.path.isfile(path):
             print("Couldn't find abilities.xml at " + path)
             exit()
@@ -234,25 +211,11 @@ class GwentDataHelper:
         root = tree.getroot()
 
         for ability in root.iter('Ability'):
-            abilities[ability.attrib['id']] = ability
+            if ability.attrib['Type'] == "CardAbility":
+                card_id = ability.attrib['Template']
+                abilities[card_id] = ability
 
         return abilities
-
-    def get_tooltip_data(self):
-        path = self._folder + "GwentTooltips.xml"
-        if not os.path.isfile(path):
-            print("Couldn't find tooltips.xml at " + path)
-            exit()
-
-        tooltip_data = {}
-
-        tree = xml.parse(path)
-        root = tree.getroot()
-
-        for tooltip in root.iter('CardTooltip'):
-            tooltip_data[tooltip.attrib['id']] = tooltip
-
-        return tooltip_data
 
     def get_card_names(self, locale):
         card_name_file = open(self.get_card_names_file(locale), "r", encoding="utf8")
@@ -285,7 +248,7 @@ class GwentDataHelper:
         return flavor_strings
 
     def get_card_names_file(self, locale):
-        path = self._folder + "cards_" + locale + ".csv"
+        path = self._folder + LOCALISATION_FILE_NAMES[locale]
         if not os.path.isfile(path):
             print("Couldn't find " + locale + " card file at " + path)
             exit()
