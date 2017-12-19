@@ -48,11 +48,7 @@ def _is_token_valid(token, tooltips):
         return False
 
 
-<<<<<<< HEAD
-def _get_evaluated_tooltips(raw_tooltips, tooltip_data, card_names, card_abilities):
-=======
 def _get_evaluated_tooltips(raw_tooltips, card_names, card_abilities):
->>>>>>> 4971500... Updated script to habdle the new Gwent data format
     # Generate complete tooltips from the raw_tooltips and accompanying data.
     tooltips = {}
     for card_id in raw_tooltips:
@@ -72,14 +68,8 @@ def _get_evaluated_tooltips(raw_tooltips, card_names, card_abilities):
 
     return tooltips
 
-<<<<<<< HEAD
-
-def _get_card_ability_value(card_abilities, ability_id, param_name):
-    ability = card_abilities.get(ability_id)
-=======
 def _get_card_ability_value(card_abilities, card_id, key):
     ability = card_abilities.get(card_id)
->>>>>>> 4971500... Updated script to habdle the new Gwent data format
     if ability is None:
         return None
     ability_data = ability.find('TemporaryVariables')
@@ -88,12 +78,7 @@ def _get_card_ability_value(card_abilities, card_id, key):
             if value.attrib['Name'] == key:
                 return value.attrib['V']
 
-<<<<<<< HEAD
-
-def _get_tokens(card_templates, card_abilities, tooltips):
-=======
 def _get_tokens(card_templates, card_abilities):
->>>>>>> 4971500... Updated script to habdle the new Gwent data format
     tokens = {}
     for card_id in card_templates:
         tokens[card_id] = []
