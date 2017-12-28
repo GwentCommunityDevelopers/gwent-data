@@ -102,7 +102,8 @@ def _get_keywords(tooltips):
         # Can just use en-US here. It doesn't matter, all regions will return the same result.
         result = re.findall(r'<keyword=([^>]+)>', tooltip)
         for key in result:
-            keywords.append(key)
+            if not key in keywords:
+                keywords.append(key)
 
         keywords_by_tooltip_id[tooltip_id] = keywords
     return keywords_by_tooltip_id
@@ -140,15 +141,19 @@ class GwentDataHelper:
     def get_card_tooltips(self, locale):
         tooltips_file = open(self.get_tooltips_file(locale), "r", encoding="utf-8")
         tooltips = {}
-        for tooltip in tooltips_file:
-            split = tooltip.split("\";\"")
-            if len(split) < 3 or "tooltip" not in split[0]:
-                continue
-            tooltip_id = split[1].replace("_tooltip", "").replace("\"", "").lstrip("0")
+        tooltip_id = None
+        for line in tooltips_file:
+            if line[0] == "\"":
+                # If the previous tooltip has not carried onto a new line.
+                split = line.split("\";\"")
+                if len(split) < 3 or "tooltip" not in split[0]:
+                    continue
+                tooltip_id = split[1].replace("_tooltip", "").replace("\"", "").lstrip("0")
 
-            # Remove any quotation marks and new lines.
-            tooltips[tooltip_id] = split[2].replace("\"\n", "").replace("\\n", "\n")
-
+                # Remove any quotation marks and new lines.
+                tooltips[tooltip_id] = split[2].replace("\"\n", "").replace("\\n", "\n")
+            elif tooltip_id != None:
+                tooltips[tooltip_id] += line.replace("\"\n", "").replace("\\n", "\n")
         tooltips_file.close()
         return tooltips
 
