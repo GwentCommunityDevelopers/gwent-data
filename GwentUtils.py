@@ -116,10 +116,12 @@ class GwentDataHelper:
         raw_tooltips = {}
         self.card_names = {}
         self.flavor_strings = {}
+        self.categories = {}
         for locale in LOCALES:
             raw_tooltips[locale] = self.get_card_tooltips(locale)
             self.card_names[locale] = self.get_card_names(locale)
             self.flavor_strings[locale] = self.get_flavor_strings(locale)
+            self.categories[locale] = self.get_categories(locale)
         card_abilities = self.get_card_abilities()
 
         self.tooltips = {}
@@ -172,6 +174,22 @@ class GwentDataHelper:
 
         tooltips_file.close()
         return keywords
+
+    def get_categories(self, locale):
+        tooltips_file = open(self.get_tooltips_file(locale), "r", encoding="utf-8")
+        categories = {}
+        for line in tooltips_file:
+            split = line.split("\";\"")
+            if len(split) < 2 or "category" not in split[1]:
+                continue
+            category_id = split[1]
+
+            categories[category_id] = {}
+            # Remove any quotation marks and new lines.
+            categories[category_id] = split[2].replace("\"", "").replace("\n", "")
+
+        tooltips_file.close()
+        return categories
 
     def get_card_templates(self):
         path = self._folder + "Templates.xml"
