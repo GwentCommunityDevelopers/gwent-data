@@ -4,89 +4,54 @@ import GwentUtils
 
 IMAGE_SIZES = ['original', 'high', 'medium', 'low', 'thumbnail']
 
+"""
+Constants from Gwent Client.
+"""
+COMMON = 1
+RARE = 2
+EPIC = 4
+LEGENDARY = 8
+
+LEADER = 1
+BRONZE = 2
+SILVER = 4
+GOLD = 8
+
+NEUTRAL = 1
+MONSTER = 2
+NILFGAARD = 4
+NORTHERN_REALMS = 8
+SCOIATAEL = 16
+SKELLIGE = 32
+
+"""
+Mill and Crafting values for each rarity.
+"""
 CRAFT_VALUES = {}
-CRAFT_VALUES[1] = {"standard": 30, "premium": 200, "upgrade": 100}
-CRAFT_VALUES[2] = {"standard": 80, "premium": 400, "upgrade": 200}
-CRAFT_VALUES[4] = {"standard": 200, "premium": 800, "upgrade": 300}
-CRAFT_VALUES[8] = {"standard": 800, "premium": 1600, "upgrade": 400}
+CRAFT_VALUES[COMMON] = {"standard": 30, "premium": 200, "upgrade": 100}
+CRAFT_VALUES[RARE] = {"standard": 80, "premium": 400, "upgrade": 200}
+CRAFT_VALUES[EPIC] = {"standard": 200, "premium": 800, "upgrade": 300}
+CRAFT_VALUES[LEGENDARY] = {"standard": 800, "premium": 1600, "upgrade": 400}
 
 MILL_VALUES = {}
-MILL_VALUES[1] = {"standard": 10, "premium": 10, "upgrade": 20}
-MILL_VALUES[2] = {"standard": 20, "premium": 20, "upgrade": 50}
-MILL_VALUES[4] = {"standard": 50, "premium": 50, "upgrade": 80}
-MILL_VALUES[8] = {"standard": 200, "premium": 200, "upgrade": 120}
+MILL_VALUES[COMMON] = {"standard": 10, "premium": 10, "upgrade": 20}
+MILL_VALUES[RARE] = {"standard": 20, "premium": 20, "upgrade": 50}
+MILL_VALUES[EPIC] = {"standard": 50, "premium": 50, "upgrade": 80}
+MILL_VALUES[LEGENDARY] = {"standard": 200, "premium": 200, "upgrade": 120}
 
-RARITIES = { 1: "Common", 2: "Rare", 4: "Epic", 8: "Legendary"}
-TYPES = { 1: "Leader", 2: "Bronze", 4: "Silver", 8: "Gold"}
-FACTIONS = { 1: "Neutral", 2: "Monster", 4: "Nilfgaard", 8: "Northern Realms", 16: "Scoiatael", 32: "Skellige"}
-
-CATEGORIES = {
-    "Aedirn": "Aedirn",
-    "Alchemy": "Alchemy",
-    "Ambush": "Ambush",
-    "An_Craite": "An Craite",
-    "Banish_In_Graveyard": "Doomed",
-    "Bear": "Bear",
-    "Beast": "Beast",
-    "Blitz": "Blitz",
-    "Blue_Stripes": "Blue Stripes",
-    "Breedable": "Breedable",
-    "Brokvar": "Brokvar",
-    "Cintra": "Cintra",
-    "Construct": "Construct",
-    "Cursed_One": "Cursed",
-    "Devourer": "Devourer",
-    "Dimun": "Dimun",
-    "Double_Agent": "Double Agent",
-    "Draconid": "Draconid",
-    "Dragon": "Dragon",
-    "Drummond": "Drummond",
-    "Dwarf": "Dwarf",
-    "Dyrad": "Dryad",
-    "Elf": "Elf",
-    "Harpy": "Harpy",
-    "Heymaey": "Haymaey",
-    "Insectoid": "Insectoid",
-    "Kaedwen": "Kaedwen",
-    "Leader": "Leader",
-    "Mage": "Mage",
-    "Medic": "Medic",
-    "Necrophage": "Necrophage",
-    "Non_Decoyable": "Stubborn",
-    "Non_Medicable": "Permadeath",
-    "Officer": "Officer",
-    "Ogroid": "Ogroid",
-    "Organic": "Organic",
-    "Potion": "Potion",
-    "Redania": "Redania",
-    "Regressing": "Regressing",
-    "Relict": "Relict",
-    "Shapeshifter": "Shapeshifter",
-    "Soldier": "Soldier",
-    "Special": "Special",
-    "Specter": "Specter",
-    "Spell": "Spell",
-    "Spy": "Agent",
-    "Support": "Support",
-    "Svalblod": "Svalblod",
-    "Tactic": "Tactic",
-    "Temeria": "Temeria",
-    "Tordarroch": "Tordarroch",
-    "Tuirseach": "Tuirseach",
-    "Vampire": "Vampire",
-    "Vodyanoi": "Vodyanoi",
-    "War_Machine": "Machine",
-    "Weather": "Weather",
-    "Wild_Hunt": "Wild Hunt",
-    "Witcher": "Witcher"
-}
+"""
+Gwent Client ID -> Gwent Data ID mapping.
+"""
+RARITIES = { COMMON: "Common", RARE: "Rare", EPIC: "Epic", LEGENDARY: "Legendary"}
+TYPES = { LEADER: "Leader", BRONZE: "Bronze", SILVER: "Silver", GOLD: "Gold"}
+FACTIONS = { NEUTRAL: "Neutral", MONSTER: "Monster", NILFGAARD: "Nilfgaard",
+    NORTHERN_REALMS: "Northern Realms", SCOIATAEL: "Scoiatael", SKELLIGE: "Skellige"}
 
 # Gaunter's 'Higher than 5' and 'Lower than 5' are not actually cards.
 INVALID_TOKENS = ['200175', '200176']
 
-
 def create_card_json(gwent_data_helper, patch):
-    # Replace with these values {0} : card id, {1} : variation id, {0} : image size
+    # Replace with these values {0} : card id, {1} : variation id, {2} : image size
     imageUrl = "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2F" +\
                     patch + "%2F{0}%2F{1}%2F{2}.png?alt=media"
 
@@ -111,6 +76,7 @@ def create_card_json(gwent_data_helper, patch):
         # False by default, will be set to true if collectible or is a token of a released card.
         card['released'] = False
 
+        # Tooltips
         card['info'] = {}
         card['infoRaw'] = {}
         for locale in GwentUtils.LOCALES:
@@ -119,9 +85,13 @@ def create_card_json(gwent_data_helper, patch):
                 card['infoRaw'][locale] = tooltip
                 card['info'][locale] = GwentUtils.clean_html(tooltip)
 
+        # Keywords.
         card['keywords'] = gwent_data_helper.keywords.get(card_id)
 
+        # Units no longer have a row restriction.
         card['positions'] = ["Melee", "Ranged", "Siege"]
+
+        # Loyalty
         card['loyalties'] = []
         placement = template.find('Placement')
         if placement.attrib['PlayerSide'] != "0":
@@ -129,47 +99,49 @@ def create_card_json(gwent_data_helper, patch):
         if placement.attrib['OpponentSide'] != "0":
             card['loyalties'].append("Disloyal")
 
+        # Categories
         card['categories'] = []
 
+        # Variations no longer exist in Gwent. To maintain backwards compatability, create 1 variation.
         card['variations'] = {}
-        for x in range(1):
-            variation = {}
-            variation_id = card_id + "00" # Old variation id format.
+        variation = {}
+        variation_id = card_id + "00" # Old variation id format.
 
-            availability = int(template.attrib['Availability'])
-            if availability == 1:
-                variation['availability'] = "BaseSet"
-            else:
-                variation['availability'] = "NonOwnable"
+        availability = int(template.attrib['Availability'])
+        if availability == 1:
+            variation['availability'] = "BaseSet"
+        else:
+            variation['availability'] = "NonOwnable"
 
-            variation['variationId'] = variation_id
+        variation['variationId'] = variation_id
 
-            collectible = availability == 1
-            variation['collectible'] = collectible
+        collectible = availability == 1
+        variation['collectible'] = collectible
 
-            # If a card is collectible, we know it has been released.
-            if collectible:
-                card['released'] = True
+        # If a card is collectible, we know it has been released.
+        if collectible:
+            card['released'] = True
 
-            rarity = int(template.find('Rarity').text)
-            variation['rarity'] = RARITIES.get(rarity)
+        rarity = int(template.find('Rarity').text)
+        variation['rarity'] = RARITIES.get(rarity)
 
-            variation['craft'] = CRAFT_VALUES.get(rarity)
-            variation['mill'] = MILL_VALUES.get(rarity)
+        variation['craft'] = CRAFT_VALUES.get(rarity)
+        variation['mill'] = MILL_VALUES.get(rarity)
 
-            art = {}
-            if collectible:
-                for image_size in IMAGE_SIZES:
-                    art[image_size] = imageUrl.format(card['ingameId'], variation_id, image_size)
-            art_definition = template.find('ArtDefinition')
+        art = {}
+        if collectible:
+            for image_size in IMAGE_SIZES:
+                art[image_size] = imageUrl.format(card['ingameId'], variation_id, image_size)
+        art_definition = template.find('ArtDefinition')
 
-            if art_definition != None:
-                art['ingameArtId'] = art_definition.attrib.get('ArtId')
+        if art_definition != None:
+            art['ingameArtId'] = art_definition.attrib.get('ArtId')
 
-            variation['art'] = art
+        variation['art'] = art
 
-            card['variations'][variation_id] = variation
+        card['variations'][variation_id] = variation
 
+        # Add all token cards to the 'related' list.
         tokens = gwent_data_helper.tokens.get(card['ingameId'])
         card['related'] = tokens
 
