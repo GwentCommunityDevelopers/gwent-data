@@ -1,65 +1,54 @@
-"122101": {
-    "categories": [ 
-      "Doomed", 
-      "Stubborn"
-    ],
-    "faction": "Northern Realms",
-    "flavor": {
-      "de-DE": "Ich war kein guter Vater, ich wei\u00df, aber ... vielleicht ist es noch nicht zu sp\u00e4t.",
-      "en-US": "I've not been a good father, I know, but\u2026 perhaps it's not too late.",
-      "etc.": "etc.",
-    },
-    "info": {
-      "de-DE": "Generiere einen Fehlgeborenen oder einen T\u00f6lpelbold.",
-      "en-US": "Spawn a Botchling or a Lubberkin.",
-      "etc.": "etc.",
-    },
-    "infoRaw": {
-      "de-DE": "<keyword=spawn>Generiere</keyword> einen Fehlgeborenen oder einen T\u00f6lpelbold.",
-      "en-US": "<keyword=spawn>Spawn</keyword> a Botchling or a Lubberkin.",
-      "etc.": "etc.",
-    },
-    "ingameId": "122101",
-    "positions": [
-      "Siege"
-    ],
-    "loyalties": [
-      "Loyal"
-    ],
-    "name": {
-      "de-DE": "Blutiger Baron",
-      "en-US": "Bloody Baron",
-      "etc.": "etc.",
-    },
-    "related": [
-      "122401",
-      "122402"
-    ],
-    "released": true,
-    "strength": 6,
-    "type": "Gold",
-    "variations": {
-      "12210100": {
-        "art": {
-          "artist": "Bart\u0142omiej Gawe\u0142",
-          "high": "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2F122101%2F12210100%2Fhigh.png?alt=media",
-          "low": "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2F122101%2F12210100%2Flow.png?alt=media",
-          "medium": "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2F122101%2F12210100%2Fmedium.png?alt=media",
-          "original": "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2F122101%2F12210100%2Foriginal.png?alt=media",
-          "thumbnail": "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2F122101%2F12210100%2Fthumbnail.png?alt=media"
-        },
-        "availability": "BaseSet",
-        "collectible": true,
-        "craft": {
-          "premium": 1600,
-          "standard": 800
-        },
-        "mill": {
-          "premium": 800,
-          "standard": 200
-        },
-        "rarity": "Legendary",
-        "variationId": "12210100"
-      }
-    }
-  }
+{
+  "categories": [
+    "card_category_25",
+    "card_category_12"
+  ],
+  "faction": "skellige",
+  "flavor": {
+    "de-DE": "Der \u00fcbelste Kerl, den Skellige je erlebt hat.",
+    "en-US": "The vilest man Skellige's ever known.",
+    "etc.": ""
+  },
+  "tooltip": {
+    "de-DE": "Lass diese Einheit <keyword=resurrect>auferstehen</keyword>, wenn sie auf den Friedhof verschoben wird, und <keyword=weaken>schw\u00e4che</keyword> sie um die H\u00e4lfte ihrer St\u00e4rke.",
+    "en-US": "Whenever this unit enters the graveyard, <keyword=resurrect>Resurrect</keyword> it and <keyword=weaken>Weaken</keyword> it by half.",
+    "etc.": ""
+  },
+  "id": "152209",
+  "keywords": [
+    "resurrect",
+    "weaken"
+  ],
+  "loyalties": [
+    "loyal"
+  ],
+  "name": {
+    "de-DE": "Morkvarg",
+    "en-US": "Morkvarg",
+    "etc.": ""
+  },
+  "related": [152209, 152209, 152209],
+  "strength": 9,
+  "color": "silver",
+  "art": {
+    "high": "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2Fv0.9.18%2F152209%2F15220900%2Fhigh.png?alt=media",
+    "artId": "1522090",
+    "low": "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2Fv0.9.18%2F152209%2F15220900%2Flow.png?alt=media",
+    "medium": "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2Fv0.9.18%2F152209%2F15220900%2Fmedium.png?alt=media",
+    "original": "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2Fv0.9.18%2F152209%2F15220900%2Foriginal.png?alt=media",
+    "thumbnail": "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2Fv0.9.18%2F152209%2F15220900%2Fthumbnail.png?alt=media"
+  },
+  "set": "BaseSet",
+  "collectible": true,
+  "craft": {
+    "premium": 800,
+    "standard": 200,
+    "upgrade": 300
+  },
+  "mill": {
+    "premium": 50,
+    "standard": 50,
+    "upgrade": 80
+  },
+  "rarity": "epic",
+}
