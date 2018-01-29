@@ -1,9 +1,9 @@
 {
   "categories": [
-    "card_category_25",
-    "card_category_12"
+    "25",
+    "12"
   ],
-  "faction": "skellige",
+  "faction": "Skellige",
   "flavor": {
     "de-DE": "Der \u00fcbelste Kerl, den Skellige je erlebt hat.",
     "en-US": "The vilest man Skellige's ever known.",
@@ -20,7 +20,7 @@
     "weaken"
   ],
   "loyalties": [
-    "loyal"
+    "Loyal"
   ],
   "name": {
     "de-DE": "Morkvarg",
@@ -29,10 +29,10 @@
   },
   "related": [152209, 152209, 152209],
   "strength": 9,
-  "color": "silver",
+  "color": "Silver",
+  "artId": "1522090",
   "art": {
     "high": "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2Fv0.9.18%2F152209%2F15220900%2Fhigh.png?alt=media",
-    "artId": "1522090",
     "low": "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2Fv0.9.18%2F152209%2F15220900%2Flow.png?alt=media",
     "medium": "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2Fv0.9.18%2F152209%2F15220900%2Fmedium.png?alt=media",
     "original": "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2Fv0.9.18%2F152209%2F15220900%2Foriginal.png?alt=media",
@@ -40,15 +40,5 @@
   },
   "set": "BaseSet",
   "collectible": true,
-  "craft": {
-    "premium": 800,
-    "standard": 200,
-    "upgrade": 300
-  },
-  "mill": {
-    "premium": 50,
-    "standard": 50,
-    "upgrade": 80
-  },
-  "rarity": "epic",
+  "rarity": "Epic",
 }
