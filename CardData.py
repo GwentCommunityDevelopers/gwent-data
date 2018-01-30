@@ -50,15 +50,6 @@ FACTIONS = { NEUTRAL: "Neutral", MONSTER: "Monster", NILFGAARD: "Nilfgaard",
 # Gaunter's 'Higher than 5' and 'Lower than 5' are not actually cards.
 INVALID_TOKENS = ['200175', '200176']
 
-"""
- Use the ID from here to look up localisations in categories output file.
- WARNING : this list is not simply 1 to 73, some numbers are missing
-"""
-CATEGORIES = [1, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 2, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 3, 30, 
-               31, 32, 33, 34, 35, 36, 37, 38, 39, 4, 40, 41, 42, 43, 44, 46, 47, 48, 49, 5, 50, 51, 52, 53, 
-               54, 55, 56, 57, 58, 59, 6, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 7, 70, 71, 8, 9, 73]
-LAST_CATEGORY = max(CATEGORIES)
-
 def create_card_json(gwent_data_helper, patch):
     # Replace with these values {0} : card id, {1} : variation id, {2} : image size
     imageUrl = "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2F" +\
@@ -112,15 +103,9 @@ def create_card_json(gwent_data_helper, patch):
         card['categories'] = []
         card['categoryIds'] = []
         categoriesSum = int(template.find('Categories').find('e0').attrib['V']);
-        # XML Card category is the sum of all categories of the card
-        for category in range(LAST_CATEGORY, 1, -1):
-            categoryPower = 2**category
-            if categoriesSum - categoryPower >= 0:
-                categoriesSum -= categoryPower
-                if category in CATEGORIES:
-                    card['categoryIds'].append("card_category_" + str(category))
-                if categoriesSum == 0:
-                    break
+        for category, bit in enumerate("{0:b}".format(categoriesSum)[::-1]):
+            if bit == '1':
+                card['categoryIds'].append("card_category_{0}".format(category))
 
         categories_en_us = gwent_data_helper.categories["en-US"]
         for category_id in card['categoryIds']:
