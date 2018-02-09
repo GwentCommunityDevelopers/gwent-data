@@ -164,7 +164,7 @@ class GwentDataHelper:
         keywords = {}
         for tooltip in tooltips_file:
             split = tooltip.split("\";\"")
-            if len(split) < 2 or "keyword" not in split[1]:
+            if len(split) < 3 or "keyword" not in split[1]:
                 continue
             keyword_id = split[1].replace("keyword_", "").replace("\"", "")
 
@@ -180,7 +180,7 @@ class GwentDataHelper:
         categories = {}
         for line in tooltips_file:
             split = line.split("\";\"")
-            if len(split) < 2 or "category" not in split[1]:
+            if len(split) < 3 or "category" not in split[1]:
                 continue
             category_id = split[1]
 
