@@ -102,7 +102,7 @@ def create_card_json(gwent_data_helper, patch):
         # Categories
         card['categories'] = []
         card['categoryIds'] = []
-        categoriesSum = int(template.find('Categories').find('e0').attrib['V']);
+        categoriesSum = int(template.find('PrimaryCategory').find('e0').attrib['V']);
         for category, bit in enumerate("{0:b}".format(categoriesSum)[::-1]):
             if bit == '1':
                 card['categoryIds'].append("card_category_{0}".format(category))
