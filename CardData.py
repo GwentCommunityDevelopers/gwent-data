@@ -64,8 +64,12 @@ def create_card_json(gwent_data_helper, patch):
         card_id = template.attrib['Id']
         card['ingameId'] = card_id
         card['strength'] = int(template.find('Power').text)
-        card['type'] = TYPES.get(int(template.find('Tier').text))
+        tier = int(template.find('Tier').text)
+        card['type'] = TYPES.get(tier)
         card['faction'] = FACTIONS.get(int(template.find('FactionId').text))
+        card['provision'] = int(template.find('Provision').text)
+        if (tier == LEADER):
+            card['mulligans'] = int(template.find('Mulligans').text)
 
         card['name'] = {}
         card['flavor'] = {}
