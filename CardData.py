@@ -172,4 +172,9 @@ def create_card_json(gwent_data_helper, patch):
                 if token_id in cards:
                     cards[token_id]['released'] = token_id not in INVALID_TOKENS
 
+    # Remove any unreleased cards
+    for card_id, card in list(cards.items()):
+        if not card['released']:
+            del cards[card_id]
+
     return cards
