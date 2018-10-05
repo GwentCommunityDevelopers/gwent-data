@@ -1,3 +1,6 @@
+# Homecoming
+See discussion on issue #30.
+
 # Gwent Data
 This project contains scripts that transforms the Gwent card data contained in xml files into a [standardised JSON format](standard-format.json).
 
