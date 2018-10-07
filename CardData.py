@@ -164,10 +164,10 @@ def create_card_json(gwent_data_helper, patch):
         if collectible:
             for image_size in IMAGE_SIZES:
                 art[image_size] = imageUrl.format(card['ingameId'], variation_id, image_size)
-        art_definition = template.find('ArtDefinition')
 
-        if art_definition != None:
-            art['ingameArtId'] = art_definition.attrib.get('ArtId')
+        art_id = template.attrib.get('ArtId')
+        if art_id != None:
+            art['ingameArtId'] = art_id
 
         variation['art'] = art
 
