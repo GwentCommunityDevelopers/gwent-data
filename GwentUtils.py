@@ -67,12 +67,6 @@ def _get_evaluated_tooltips(raw_tooltips, card_names, card_abilities, card_templ
             value = template.find('MaxRange').text
             tooltips[card_id] = tooltips[card_id].replace(key, value)
 
-        # Replace Power placeholder
-        result = re.findall(r'.*?(\{power\}).*?', tooltips[card_id])
-        for key in result:
-            value = template.find('Power').text
-            tooltips[card_id] = tooltips[card_id].replace(key, value)
-
         # Now replace all the other card abilities.
         # Regex. Get all strings that lie between a '{' and '}'.
         result = re.findall(r'.*?\{(.*?)\}.*?', tooltips[card_id])
