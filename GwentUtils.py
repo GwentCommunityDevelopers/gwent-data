@@ -51,6 +51,7 @@ def _get_evaluated_tooltips(raw_tooltips, card_names, card_abilities, card_templ
     # Generate complete tooltips from the raw_tooltips and accompanying data.
     tooltips = {}
     for card_id in raw_tooltips:
+
         # Some cards don't have info.
         if raw_tooltips.get(card_id) is None or raw_tooltips.get(card_id) == "":
             tooltips[card_id] = ""
@@ -61,16 +62,16 @@ def _get_evaluated_tooltips(raw_tooltips, card_names, card_abilities, card_templ
 
         template = card_templates[card_id]
         # First replace the MaxRange placeholder
-        rangeResult = re.findall(r'.*?(\{Card\.MaxRange\}).*?', tooltips[card_id])
-        for key in rangeResult:
-            maxRange = template.find('MaxRange').text
-            tooltips[card_id] = tooltips[card_id].replace(key, maxRange)
+        result = re.findall(r'.*?(\{Card\.MaxRange\}).*?', tooltips[card_id])
+        for key in result:
+            value = template.find('MaxRange').text
+            tooltips[card_id] = tooltips[card_id].replace(key, value)
 
         # Replace Power placeholder
-        powerResult = re.findall(r'.*?(\{power\}).*?', tooltips[card_id])
-        for key in rangeResult:
-            power = template.find('Power').text
-            tooltips[card_id] = tooltips[card_id].replace(key, power)
+        result = re.findall(r'.*?(\{power\}).*?', tooltips[card_id])
+        for key in result:
+            value = template.find('Power').text
+            tooltips[card_id] = tooltips[card_id].replace(key, value)
 
         # Now replace all the other card abilities.
         # Regex. Get all strings that lie between a '{' and '}'.
@@ -86,7 +87,7 @@ def _get_card_ability_value(card_abilities, card_id, key):
     ability = card_abilities.get(card_id)
     if ability is None:
         return None
-    ability_data = ability.find('TemporaryVariables')
+    ability_data = ability.find('PersistentVariables')
     if ability_data is not None:
         for value in ability_data:
             if value.attrib['Name'] == key:
@@ -162,6 +163,10 @@ class GwentDataHelper:
             if "tooltip" not in split[0]:
                 continue
             tooltip_id = split[0].replace("_tooltip", "").replace("\"", "").lstrip("0")
+
+            # Remove any weird tooltip ids e.g. 64_tooltip_lt
+            if "_lt" in tooltip_id:
+                continue
 
             # Remove any quotation marks and new lines.
             tooltips[tooltip_id] = split[1].replace("\"\n", "").replace("\\n", "\n")
