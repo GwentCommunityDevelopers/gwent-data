@@ -71,8 +71,9 @@ def create_card_json(gwent_data_helper, patch):
         if (tier == LEADER):
             card['mulligans'] = int(template.find('Mulligans').text)
 
-        if card_id in gwent_data_helper.card_max_reach:
-            card['reach'] = gwent_data_helper.card_max_reach[card_id]
+        maxRange = int(template.find('MaxRange').text)
+        if (maxRange > -1):
+            card['reach'] = maxRange
 
         card['name'] = {}
         card['flavor'] = {}

@@ -47,7 +47,7 @@ def _is_token_valid(token, tooltips):
         return False
 
 
-def _get_evaluated_tooltips(raw_tooltips, card_names, card_abilities, card_reach):
+def _get_evaluated_tooltips(raw_tooltips, card_names, card_abilities, card_templates):
     # Generate complete tooltips from the raw_tooltips and accompanying data.
     tooltips = {}
     for card_id in raw_tooltips:
@@ -61,11 +61,10 @@ def _get_evaluated_tooltips(raw_tooltips, card_names, card_abilities, card_reach
 
         # First replace the MaxRange placeholder
         rangeResult = re.findall(r'.*?(\{Card\.MaxRange\}).*?', tooltips[card_id])
-
         for key in rangeResult:
-            maxRange = card_reach[card_id]
-            if maxRange is not None:
-                tooltips[card_id] = tooltips[card_id].replace(key, str(maxRange))
+            template = card_templates[card_id]
+            maxRange = template.find('MaxRange').text
+            tooltips[card_id] = tooltips[card_id].replace(key, maxRange)
 
         # Now replace all the other card abilities.
         # Regex. Get all strings that lie between a '{' and '}'.
@@ -133,16 +132,9 @@ class GwentDataHelper:
             self.categories[locale] = self.get_categories(locale)
         card_abilities = self.get_card_abilities()
 
-        self.card_max_reach = {}
-        for template_id in self.card_templates:
-            template = self.card_templates[template_id]
-            maxRange = int(template.find('MaxRange').text)
-            if (maxRange > -1):
-                self.card_max_reach[template_id] = maxRange
-
         self.tooltips = {}
         for locale in LOCALES:
-            self.tooltips[locale] = _get_evaluated_tooltips(raw_tooltips[locale], self.card_names[locale], card_abilities, self.card_max_reach)
+            self.tooltips[locale] = _get_evaluated_tooltips(raw_tooltips[locale], self.card_names[locale], card_abilities, self.card_templates)
 
         # Can use any locale here, all locales will return the same result.
         self.keywords = _get_keywords(self.tooltips[LOCALES[0]])
