@@ -50,9 +50,11 @@ FACTIONS = { NEUTRAL: "Neutral", MONSTER: "Monster", NILFGAARD: "Nilfgaard",
 """
 Gwent Card Sets
 """
-BASE = 1
-TUTORIAL = 2
-THRONEBREAKER = 3
+TOKEN_SET = 0
+BASE_SET = 1
+TUTORIAL_SET = 2
+THRONEBREAKER_SET = 3
+LEADER_SET = 10
 
 # Gaunter's 'Higher than 5' and 'Lower than 5' are not actually cards.
 INVALID_TOKENS = ['200175', '200176']
@@ -136,7 +138,7 @@ def create_card_json(gwent_data_helper, patch):
 
         variation['variationId'] = variation_id
 
-        collectible = availability == BASE or availability == THRONEBREAKER
+        collectible = availability == BASE_SET or availability == THRONEBREAKER_SET or availability == LEADER_SET
         variation['collectible'] = collectible
 
         # If a card is collectible, we know it has been released.
