@@ -47,6 +47,13 @@ TYPES = { LEADER: "Leader", BRONZE: "Bronze", SILVER: "Silver", GOLD: "Gold"}
 FACTIONS = { NEUTRAL: "Neutral", MONSTER: "Monster", NILFGAARD: "Nilfgaard",
     NORTHERN_REALMS: "Northern Realms", SCOIATAEL: "Scoiatael", SKELLIGE: "Skellige"}
 
+"""
+Gwent Card Sets
+"""
+BASE = 1
+TUTORIAL = 2
+THRONEBREAKER = 3
+
 # Gaunter's 'Higher than 5' and 'Lower than 5' are not actually cards.
 INVALID_TOKENS = ['200175', '200176']
 
@@ -126,14 +133,10 @@ def create_card_json(gwent_data_helper, patch):
         variation_id = card_id + "00" # Old variation id format.
 
         availability = int(template.attrib['Availability'])
-        if availability == 1:
-            variation['availability'] = "BaseSet"
-        else:
-            variation['availability'] = "NonOwnable"
 
         variation['variationId'] = variation_id
 
-        collectible = availability == 1
+        collectible = availability == BASE or availability == THRONEBREAKER
         variation['collectible'] = collectible
 
         # If a card is collectible, we know it has been released.
