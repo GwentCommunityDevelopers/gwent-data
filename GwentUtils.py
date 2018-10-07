@@ -87,10 +87,18 @@ def _get_card_ability_value(card_abilities, card_id, key):
     ability = card_abilities.get(card_id)
     if ability is None:
         return None
+
+    lower_case_key = key.lower()
     ability_data = ability.find('PersistentVariables')
     if ability_data is not None:
         for value in ability_data:
-            if value.attrib['Name'] == key:
+            if value.attrib['Name'].lower() == lower_case_key:
+                return value.attrib['V']
+
+    ability_data = ability.find('TemporaryVariables')
+    if ability_data is not None:
+        for value in ability_data:
+            if value.attrib['Name'].lower() == lower_case_key:
                 return value.attrib['V']
 
 def _get_tokens(card_templates, card_abilities):
