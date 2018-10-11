@@ -127,10 +127,18 @@ def create_card_json(gwent_data_helper, patch):
         # Categories
         card['categories'] = []
         card['categoryIds'] = []
-        categoriesSum = int(template.find('PrimaryCategory').find('e0').attrib['V']);
-        for category, bit in enumerate("{0:b}".format(categoriesSum)[::-1]):
-            if bit == '1':
-                card['categoryIds'].append("card_category_{0}".format(category))
+
+        # There are 2 category nodes
+        for node in ["PrimaryCategory", "Categories"]:
+            for multiplier in range(2):
+                # e0, e1
+                e = "e{0}".format(multiplier)
+                categories_sum = int(template.find(node).find(e).attrib['V'])
+                for category, bit in enumerate("{0:b}".format(categories_sum)[::-1]):
+                    if bit == '1':
+                        # e1 categories are off by 64.
+                        adjusted_category = category + (64 * multiplier)
+                        card['categoryIds'].append("card_category_{0}".format(adjusted_category))
 
         categories_en_us = gwent_data_helper.categories["en-US"]
         for category_id in card['categoryIds']:
