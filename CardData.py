@@ -180,6 +180,9 @@ def create_card_json(gwent_data_helper, patch):
         variation['art'] = art
 
         card['variations'][variation_id] = variation
+        artist = gwent_data_helper.artists.get(art_id)
+        if artist != None:
+            card['artist'] = artist
 
         # Add all token cards to the 'related' list.
         tokens = gwent_data_helper.tokens.get(card['ingameId'])

@@ -150,6 +150,8 @@ class GwentDataHelper:
 
         self.tokens = _get_tokens(self.card_templates, card_abilities)
 
+        self.artists = self.get_artists()
+
     def get_tooltips_file(self, locale):
         path = self._folder + LOCALISATION_FILE_NAMES[locale]
         if not os.path.isfile(path):
@@ -222,6 +224,25 @@ class GwentDataHelper:
             card_templates[template.attrib['Id']] = template
 
         return card_templates
+
+    def get_artists(self):
+        path = self._folder + "ArtDefinitions.xml"
+        if not os.path.isfile(path):
+            print("Couldn't find ArtDefinitions.xml at " + path)
+            exit()
+
+        artists = {}
+
+        tree = xml.parse(path)
+        root = tree.getroot()
+
+        for art in root.iter('ArtDefinition'):
+            art_id = art.attrib['ArtId']
+            artist = art.get('ArtistName')
+            if artist != None:
+                artists[art_id] = artist
+
+        return artists
 
     def get_card_abilities(self):
         path = self._folder + "Abilities.xml"
