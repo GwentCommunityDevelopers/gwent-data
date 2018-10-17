@@ -24,6 +24,11 @@ NORTHERN_REALMS = 8
 SCOIATAEL = 16
 SKELLIGE = 32
 
+TYPE_LEADER = 1
+TYPE_SPELL = 2
+TYPE_UNIT = 4
+TYPE_ARTIFACT = 8
+
 """
 Mill and Crafting values for each rarity.
 """
@@ -43,9 +48,10 @@ MILL_VALUES[LEGENDARY] = {"standard": 200, "premium": 200, "upgrade": 120}
 Gwent Client ID -> Gwent Data ID mapping.
 """
 RARITIES = { COMMON: "Common", RARE: "Rare", EPIC: "Epic", LEGENDARY: "Legendary"}
-TYPES = { LEADER: "Leader", BRONZE: "Bronze", SILVER: "Silver", GOLD: "Gold"}
+TIERS = { LEADER: "Leader", BRONZE: "Bronze", SILVER: "Silver", GOLD: "Gold"}
 FACTIONS = { NEUTRAL: "Neutral", MONSTER: "Monster", NILFGAARD: "Nilfgaard",
     NORTHERN_REALMS: "Northern Realms", SCOIATAEL: "Scoiatael", SKELLIGE: "Skellige"}
+TYPES = { TYPE_LEADER: "Leader", TYPE_SPELL: "Spell", TYPE_UNIT: "Unit", TYPE_ARTIFACT: "Artifact"}
 
 """
 Gwent Card Sets
@@ -82,7 +88,9 @@ def create_card_json(gwent_data_helper, patch):
         card['ingameId'] = card_id
         card['strength'] = int(template.find('Power').text)
         tier = int(template.find('Tier').text)
-        card['type'] = TYPES.get(tier)
+        card['type'] = TIERS.get(tier)
+        card_type = int(template.find('Type').text)
+        card['cardType'] = TYPES.get(card_type)
         card['faction'] = FACTIONS.get(int(template.find('FactionId').text))
         card['provision'] = int(template.find('Provision').text)
         if (tier == LEADER):
