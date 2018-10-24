@@ -1,1 +1,10 @@
 raw/*
+
+data_definitions.zip
+data_definitions/
+keywords*.json
+cards*.json
+categories*.json
+
+__pycache__/
+.DS_Store
