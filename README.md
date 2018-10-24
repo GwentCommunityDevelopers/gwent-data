@@ -7,7 +7,7 @@ This project contains scripts that transforms the Gwent card data contained in x
 ### Extracting card data from data_definitions.zip
 1. Unzip data_definitions.zip
 2. Run gwent.py, passing in a folder that contains all the files from step 1 with the desired version. (Version is used to generate card image urls)
-    e.g. python3 gwent.py data_definitions/ v0.9.10
+    e.g. `python3 gwent.py data_definitions/ v0.9.10`
 
 ## Contributing
 Please branch off of master and then submit a PR with your changes. This allows it to be reviewed by other contributors.
