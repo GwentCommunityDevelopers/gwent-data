@@ -24,6 +24,11 @@ NORTHERN_REALMS = 8
 SCOIATAEL = 16
 SKELLIGE = 32
 
+TYPE_LEADER = 1
+TYPE_SPELL = 2
+TYPE_UNIT = 4
+TYPE_ARTIFACT = 8
+
 """
 Mill and Crafting values for each rarity.
 """
@@ -43,9 +48,27 @@ MILL_VALUES[LEGENDARY] = {"standard": 200, "premium": 200, "upgrade": 120}
 Gwent Client ID -> Gwent Data ID mapping.
 """
 RARITIES = { COMMON: "Common", RARE: "Rare", EPIC: "Epic", LEGENDARY: "Legendary"}
-TYPES = { LEADER: "Leader", BRONZE: "Bronze", SILVER: "Silver", GOLD: "Gold"}
+TIERS = { LEADER: "Leader", BRONZE: "Bronze", SILVER: "Silver", GOLD: "Gold"}
 FACTIONS = { NEUTRAL: "Neutral", MONSTER: "Monster", NILFGAARD: "Nilfgaard",
     NORTHERN_REALMS: "Northern Realms", SCOIATAEL: "Scoiatael", SKELLIGE: "Skellige"}
+TYPES = { TYPE_LEADER: "Leader", TYPE_SPELL: "Spell", TYPE_UNIT: "Unit", TYPE_ARTIFACT: "Artifact"}
+
+"""
+Gwent Card Sets
+"""
+TOKEN_SET = 0
+BASE_SET = 1
+TUTORIAL_SET = 2
+THRONEBREAKER_SET = 3
+UNMILLABLE_SET = 10
+
+CARD_SETS = {
+    TOKEN_SET: "NonOwnable",
+    BASE_SET: "BaseSet",
+    TUTORIAL_SET: "Tutorial",
+    THRONEBREAKER_SET: "Thronebreaker",
+    UNMILLABLE_SET: "Unmillable"
+}
 
 # Gaunter's 'Higher than 5' and 'Lower than 5' are not actually cards.
 INVALID_TOKENS = ['200175', '200176']
@@ -64,8 +87,18 @@ def create_card_json(gwent_data_helper, patch):
         card_id = template.attrib['Id']
         card['ingameId'] = card_id
         card['strength'] = int(template.find('Power').text)
-        card['type'] = TYPES.get(int(template.find('Tier').text))
+        tier = int(template.find('Tier').text)
+        card['type'] = TIERS.get(tier)
+        card_type = int(template.find('Type').text)
+        card['cardType'] = TYPES.get(card_type)
         card['faction'] = FACTIONS.get(int(template.find('FactionId').text))
+        card['provision'] = int(template.find('Provision').text)
+        if (tier == LEADER):
+            card['mulligans'] = int(template.find('Mulligans').text)
+
+        maxRange = int(template.find('MaxRange').text)
+        if (maxRange > -1):
+            card['reach'] = maxRange
 
         card['name'] = {}
         card['flavor'] = {}
@@ -102,10 +135,18 @@ def create_card_json(gwent_data_helper, patch):
         # Categories
         card['categories'] = []
         card['categoryIds'] = []
-        categoriesSum = int(template.find('Categories').find('e0').attrib['V']);
-        for category, bit in enumerate("{0:b}".format(categoriesSum)[::-1]):
-            if bit == '1':
-                card['categoryIds'].append("card_category_{0}".format(category))
+
+        # There are 2 category nodes
+        for node in ["PrimaryCategory", "Categories"]:
+            for multiplier in range(2):
+                # e0, e1
+                e = "e{0}".format(multiplier)
+                categories_sum = int(template.find(node).find(e).attrib['V'])
+                for category, bit in enumerate("{0:b}".format(categories_sum)[::-1]):
+                    if bit == '1':
+                        # e1 categories are off by 64.
+                        adjusted_category = category + (64 * multiplier)
+                        card['categoryIds'].append("card_category_{0}".format(adjusted_category))
 
         categories_en_us = gwent_data_helper.categories["en-US"]
         for category_id in card['categoryIds']:
@@ -118,14 +159,11 @@ def create_card_json(gwent_data_helper, patch):
         variation_id = card_id + "00" # Old variation id format.
 
         availability = int(template.attrib['Availability'])
-        if availability == 1:
-            variation['availability'] = "BaseSet"
-        else:
-            variation['availability'] = "NonOwnable"
 
         variation['variationId'] = variation_id
 
-        collectible = availability == 1
+        variation['availability'] = CARD_SETS[availability]
+        collectible = availability == BASE_SET or availability == THRONEBREAKER_SET or availability == UNMILLABLE_SET
         variation['collectible'] = collectible
 
         # If a card is collectible, we know it has been released.
@@ -142,14 +180,17 @@ def create_card_json(gwent_data_helper, patch):
         if collectible:
             for image_size in IMAGE_SIZES:
                 art[image_size] = imageUrl.format(card['ingameId'], variation_id, image_size)
-        art_definition = template.find('ArtDefinition')
 
-        if art_definition != None:
-            art['ingameArtId'] = art_definition.attrib.get('ArtId')
+        art_id = template.attrib.get('ArtId')
+        if art_id != None:
+            art['ingameArtId'] = art_id
 
         variation['art'] = art
 
         card['variations'][variation_id] = variation
+        artist = gwent_data_helper.artists.get(art_id)
+        if artist != None:
+            card['artist'] = artist
 
         # Add all token cards to the 'related' list.
         tokens = gwent_data_helper.tokens.get(card['ingameId'])
@@ -164,5 +205,10 @@ def create_card_json(gwent_data_helper, patch):
             for token_id in card.get('related'):
                 if token_id in cards:
                     cards[token_id]['released'] = token_id not in INVALID_TOKENS
+
+    # Remove any unreleased cards
+    for card_id, card in list(cards.items()):
+        if not card['released']:
+            del cards[card_id]
 
     return cards
