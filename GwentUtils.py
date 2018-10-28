@@ -106,7 +106,15 @@ def _get_tokens(card_templates, card_abilities):
         if ability_data is not None:
             for value in ability_data.iter("V"):
                 if value.attrib.get('Type') == "CardDefinition":
-                    tokens[card_id].append(value.attrib['TemplateId'])
+                    token_id = value.attrib['TemplateId']
+                    if token_id not in tokens[card_id]:
+                        tokens[card_id].append(token_id)
+
+                for child in value:
+                    if child.attrib.get('Type') == "CardDefinition":
+                        token_id = child.attrib['TemplateId']
+                        if token_id not in tokens[card_id]:
+                            tokens[card_id].append(token_id)
     return tokens
 
 
