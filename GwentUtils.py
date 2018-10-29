@@ -171,7 +171,7 @@ class GwentDataHelper:
         tooltips_file = open(self.get_tooltips_file(locale), "r", encoding="utf-8")
         tooltips = {}
         for line in tooltips_file:
-            split = line.split(";")
+            split = line.split(";", 1)
             if "tooltip" not in split[0]:
                 continue
             tooltip_id = split[0].replace("_tooltip", "").replace("\"", "").lstrip("0")
