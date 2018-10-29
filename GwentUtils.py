@@ -189,7 +189,7 @@ class GwentDataHelper:
         tooltips_file = open(self.get_tooltips_file(locale), "r", encoding="utf-8")
         keywords = {}
         for tooltip in tooltips_file:
-            split = tooltip.split(";")
+            split = tooltip.split(";", 1)
             if "keyword" not in split[0]:
                 continue
             keyword_id = split[0].replace("keyword_", "").replace("\"", "")
@@ -205,7 +205,7 @@ class GwentDataHelper:
         tooltips_file = open(self.get_tooltips_file(locale), "r", encoding="utf-8")
         categories = {}
         for line in tooltips_file:
-            split = line.split(";")
+            split = line.split(";", 1)
             if "category" not in split[0]:
                 continue
             category_id = split[0]
@@ -274,7 +274,7 @@ class GwentDataHelper:
         card_name_file = open(self.get_card_names_file(locale), "r", encoding="utf8")
         card_names = {}
         for line in card_name_file:
-            split = line.split(";")
+            split = line.split(";", 1)
             if len(split) < 2:
                 continue
             if "_name" in split[0]:
@@ -289,7 +289,7 @@ class GwentDataHelper:
         card_name_file = open(self.get_card_names_file(locale), "r", encoding="utf8")
         flavor_strings = {}
         for line in card_name_file:
-            split = line.split(";")
+            split = line.split(";", 1)
             if len(split) < 2:
                 continue
             if "_fluff" in split[0]:
