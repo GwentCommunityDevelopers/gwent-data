@@ -94,7 +94,9 @@ def create_card_json(gwent_data_helper, patch):
         card['faction'] = FACTIONS.get(int(template.find('FactionId').text))
         card['provision'] = int(template.find('Provision').text)
         if (tier == LEADER):
-            card['mulligans'] = int(template.find('Mulligans').text)
+            # Mulligan values are the same for every leader now.
+            card['mulligans'] = 0
+            card['provisionBoost'] = int(template.find('Provision').text)
 
         maxRange = int(template.find('MaxRange').text)
         if (maxRange > -1):
