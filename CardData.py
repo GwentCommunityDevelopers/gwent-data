@@ -73,11 +73,7 @@ CARD_SETS = {
 # Gaunter's 'Higher than 5' and 'Lower than 5' are not actually cards.
 INVALID_TOKENS = ['200175', '200176']
 
-def create_card_json(gwent_data_helper, patch):
-    # Replace with these values {0} : card id, {1} : variation id, {2} : image size
-    imageUrl = "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2F" +\
-                    patch + "%2F{0}%2F{1}%2F{2}.png?alt=media"
-
+def create_card_json(gwent_data_helper, patch, base_image_url):
     cards = {}
 
     card_templates = gwent_data_helper.card_templates
@@ -179,13 +175,17 @@ def create_card_json(gwent_data_helper, patch):
         variation['mill'] = MILL_VALUES.get(rarity)
 
         art = {}
-        if collectible:
-            for image_size in IMAGE_SIZES:
-                art[image_size] = imageUrl.format(card['ingameId'], variation_id, image_size)
-
         art_id = template.attrib.get('ArtId')
         if art_id != None:
             art['ingameArtId'] = art_id
+
+        if collectible:
+            for image_size in IMAGE_SIZES:
+                art[image_size] = base_image_url.replace("{patch}", patch) \
+                    .replace("{cardId}", card_id) \
+                    .replace("{variationId}", variation_id) \
+                    .replace("{size}", image_size) \
+                    .replace("{artId}", art_id)
 
         variation['art'] = art
 
@@ -195,7 +195,7 @@ def create_card_json(gwent_data_helper, patch):
             card['artist'] = artist
 
         # Add all token cards to the 'related' list.
-        tokens = gwent_data_helper.tokens.get(card['ingameId'])
+        tokens = gwent_data_helper.tokens.get(card_id)
         card['related'] = tokens
 
         cards[card_id] = card
