@@ -28,6 +28,7 @@ TYPE_LEADER = 1
 TYPE_SPELL = 2
 TYPE_UNIT = 4
 TYPE_ARTIFACT = 8
+TYPE_STRATEGEM = 16
 
 """
 Mill and Crafting values for each rarity.
@@ -51,7 +52,7 @@ RARITIES = { COMMON: "Common", RARE: "Rare", EPIC: "Epic", LEGENDARY: "Legendary
 TIERS = { LEADER: "Leader", BRONZE: "Bronze", SILVER: "Silver", GOLD: "Gold"}
 FACTIONS = { NEUTRAL: "Neutral", MONSTER: "Monster", NILFGAARD: "Nilfgaard",
     NORTHERN_REALMS: "Northern Realms", SCOIATAEL: "Scoiatael", SKELLIGE: "Skellige"}
-TYPES = { TYPE_LEADER: "Leader", TYPE_SPELL: "Spell", TYPE_UNIT: "Unit", TYPE_ARTIFACT: "Artifact"}
+TYPES = { TYPE_LEADER: "Leader", TYPE_SPELL: "Spell", TYPE_UNIT: "Unit", TYPE_ARTIFACT: "Artifact", TYPE_STRATEGEM: "Strategem"}
 
 """
 Gwent Card Sets
@@ -61,13 +62,15 @@ BASE_SET = 1
 TUTORIAL_SET = 2
 THRONEBREAKER_SET = 3
 UNMILLABLE_SET = 10
+CRIMSONCURSE_SET = 11
 
 CARD_SETS = {
     TOKEN_SET: "NonOwnable",
     BASE_SET: "BaseSet",
     TUTORIAL_SET: "Tutorial",
     THRONEBREAKER_SET: "Thronebreaker",
-    UNMILLABLE_SET: "Unmillable"
+    UNMILLABLE_SET: "Unmillable",
+    CRIMSONCURSE_SET: "CrimsonCurse"
 }
 
 # Gaunter's 'Higher than 5' and 'Lower than 5' are not actually cards.
@@ -161,7 +164,7 @@ def create_card_json(gwent_data_helper, patch, base_image_url):
         variation['variationId'] = variation_id
 
         variation['availability'] = CARD_SETS[availability]
-        collectible = availability == BASE_SET or availability == THRONEBREAKER_SET or availability == UNMILLABLE_SET
+        collectible = availability == BASE_SET or availability == THRONEBREAKER_SET or availability == UNMILLABLE_SET or availability == CRIMSONCURSE_SET
         variation['collectible'] = collectible
 
         # If a card is collectible, we know it has been released.
