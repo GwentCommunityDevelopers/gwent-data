@@ -23,6 +23,7 @@ NILFGAARD = 4
 NORTHERN_REALMS = 8
 SCOIATAEL = 16
 SKELLIGE = 32
+SYNDICATE = 64
 
 TYPE_LEADER = 1
 TYPE_SPELL = 2
@@ -51,7 +52,7 @@ Gwent Client ID -> Gwent Data ID mapping.
 RARITIES = { COMMON: "Common", RARE: "Rare", EPIC: "Epic", LEGENDARY: "Legendary"}
 TIERS = { LEADER: "Leader", BRONZE: "Bronze", SILVER: "Silver", GOLD: "Gold"}
 FACTIONS = { NEUTRAL: "Neutral", MONSTER: "Monster", NILFGAARD: "Nilfgaard",
-    NORTHERN_REALMS: "Northern Realms", SCOIATAEL: "Scoiatael", SKELLIGE: "Skellige"}
+    NORTHERN_REALMS: "Northern Realms", SCOIATAEL: "Scoiatael", SKELLIGE: "Skellige", SYNDICATE: "Syndicate"}
 TYPES = { TYPE_LEADER: "Leader", TYPE_SPELL: "Spell", TYPE_UNIT: "Unit", TYPE_ARTIFACT: "Artifact", TYPE_STRATEGEM: "Strategem"}
 
 """
@@ -63,6 +64,7 @@ TUTORIAL_SET = 2
 THRONEBREAKER_SET = 3
 UNMILLABLE_SET = 10
 CRIMSONCURSE_SET = 11
+NOVIGRAD_SET = 12
 
 CARD_SETS = {
     TOKEN_SET: "NonOwnable",
@@ -70,7 +72,8 @@ CARD_SETS = {
     TUTORIAL_SET: "Tutorial",
     THRONEBREAKER_SET: "Thronebreaker",
     UNMILLABLE_SET: "Unmillable",
-    CRIMSONCURSE_SET: "CrimsonCurse"
+    CRIMSONCURSE_SET: "CrimsonCurse",
+    NOVIGRAD_SET: "Novigrad"
 }
 
 # Gaunter's 'Higher than 5' and 'Lower than 5' are not actually cards.
@@ -91,6 +94,7 @@ def create_card_json(gwent_data_helper, patch, base_image_url):
         card_type = int(template.find('Type').text)
         card['cardType'] = TYPES.get(card_type)
         card['faction'] = FACTIONS.get(int(template.find('FactionId').text))
+        card['secondaryFaction'] = FACTIONS.get(int(template.find('SecondaryFactionId').text)) if template.find('SecondaryFactionId') is not None else None
         card['provision'] = int(template.find('Provision').text)
         if (tier == LEADER):
             # Mulligan values are the same for every leader now.
@@ -164,7 +168,7 @@ def create_card_json(gwent_data_helper, patch, base_image_url):
         variation['variationId'] = variation_id
 
         variation['availability'] = CARD_SETS[availability]
-        collectible = availability == BASE_SET or availability == THRONEBREAKER_SET or availability == UNMILLABLE_SET or availability == CRIMSONCURSE_SET
+        collectible = availability in {BASE_SET, THRONEBREAKER_SET, UNMILLABLE_SET, CRIMSONCURSE_SET, NOVIGRAD_SET}
         variation['collectible'] = collectible
 
         # If a card is collectible, we know it has been released.
