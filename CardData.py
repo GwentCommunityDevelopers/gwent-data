@@ -94,7 +94,9 @@ def create_card_json(gwent_data_helper, patch, base_image_url):
         card_type = int(template.find('Type').text)
         card['cardType'] = TYPES.get(card_type)
         card['faction'] = FACTIONS.get(int(template.find('FactionId').text))
-        card['secondaryFaction'] = FACTIONS.get(int(template.find('SecondaryFactionId').text)) if template.find('SecondaryFactionId') is not None else None
+        secondaryFaction = template.find('SecondaryFactionId')
+        if secondaryFaction != None and int(secondaryFaction.text) in FACTIONS:
+            card['secondaryFaction'] = FACTIONS.get(int(secondaryFaction.text))
         card['provision'] = int(template.find('Provision').text)
         if (tier == LEADER):
             # Mulligan values are the same for every leader now.
