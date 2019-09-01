@@ -16,10 +16,14 @@ parser = argparse.ArgumentParser(description="Transform the Gwent card data cont
 parser.add_argument("inputFolder", help="unzipped data_definitions.zip. Folder containing the xml files.")
 parser.add_argument("-p", "--patch", help="Specifies the Gwent patch version. Used to create image urls.")
 parser.add_argument("-i", "--images", help="Base image url to use for card images. See README for more info.")
+parser.add_argument("-l", "--language", help="Includes just the translations for the selected language. Results in much smaller json files. Choose from: en-US, de-DE, es-ES, es-MX, fr-FR, it-IT, ja-JP, ko-KR, pl-PL, pt-BR, ru-RU, zh-CN, zh-TW")
 args = parser.parse_args()
 patch = args.patch
 rawFolder = args.inputFolder
 base_image_url = args.images
+locale = args.language
+if locale:
+    GwentUtils.LOCALES = [locale]
 if not base_image_url:
     base_image_url = "https://firebasestorage.googleapis.com/v0/b/gwent-9e62a.appspot.com/o/images%2F{patch}%2F{cardId}%2F{variationId}%2F{size}.png?alt=media"
     if not patch:
