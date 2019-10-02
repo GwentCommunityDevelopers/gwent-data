@@ -65,6 +65,7 @@ THRONEBREAKER_SET = 3
 UNMILLABLE_SET = 10
 CRIMSONCURSE_SET = 11
 NOVIGRAD_SET = 12
+IRON_JUDGEMENT_SET = 13
 
 CARD_SETS = {
     TOKEN_SET: "NonOwnable",
@@ -73,7 +74,8 @@ CARD_SETS = {
     THRONEBREAKER_SET: "Thronebreaker",
     UNMILLABLE_SET: "Unmillable",
     CRIMSONCURSE_SET: "CrimsonCurse",
-    NOVIGRAD_SET: "Novigrad"
+    NOVIGRAD_SET: "Novigrad",
+    IRON_JUDGEMENT_SET: "IronJudgement"
 }
 
 # Gaunter's 'Higher than 5' and 'Lower than 5' are not actually cards.
