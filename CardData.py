@@ -172,7 +172,7 @@ def create_card_json(gwent_data_helper, patch, base_image_url):
         variation['variationId'] = variation_id
 
         variation['availability'] = CARD_SETS[availability]
-        collectible = availability in {BASE_SET, THRONEBREAKER_SET, UNMILLABLE_SET, CRIMSONCURSE_SET, NOVIGRAD_SET}
+        collectible = availability in {BASE_SET, THRONEBREAKER_SET, UNMILLABLE_SET, CRIMSONCURSE_SET, NOVIGRAD_SET, IRON_JUDGEMENT_SET}
         variation['collectible'] = collectible
 
         # If a card is collectible, we know it has been released.
