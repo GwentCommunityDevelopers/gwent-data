@@ -166,6 +166,8 @@ class GwentDataHelper:
 
         self.artists = self.get_artists()
 
+        self.armor = self.get_card_armor()
+
     def get_tooltips_file(self, locale):
         path = self._folder + LOCALISATION_FILE_NAMES[locale]
         if not os.path.isfile(path):
@@ -275,6 +277,33 @@ class GwentDataHelper:
                 abilities[card_id] = ability
 
         return abilities
+
+    def get_card_armor(self):
+        path = self._folder + "Abilities.xml"
+        if not os.path.isfile(path):
+            print("Couldn't find abilities.xml at " + path)
+            exit()
+
+        armor = {}
+
+        tree = xml.parse(path)
+        root = tree.getroot()
+
+        for ability in root.iter('Ability'):
+            card_id = None
+
+            if ability.attrib['Type'] == "CardAbility":
+                card_id = ability.attrib['Template']
+            
+            if card_id:
+                for tempVar in ability.iter('TemporaryVariables'):
+                    children = list(tempVar)
+
+                    for child in children:
+                        if (child.attrib['Name'] == "Armor"):
+                            armor[card_id] = child.attrib['V']
+
+        return armor
 
     def get_card_names(self, locale):
         card_name_file = open(self.get_card_names_file(locale), "r", encoding="utf8")

@@ -209,6 +209,10 @@ def create_card_json(gwent_data_helper, patch, base_image_url):
         tokens = gwent_data_helper.tokens.get(card_id)
         card['related'] = tokens
 
+        armor = gwent_data_helper.armor.get(card_id)
+        if armor != None:
+            card['armor'] = int(armor)
+
         cards[card_id] = card
 
     # Check tokens are correctly marked as released.
