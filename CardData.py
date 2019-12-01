@@ -210,7 +210,7 @@ def create_card_json(gwent_data_helper, patch, base_image_url):
         card['related'] = tokens
 
         armor = gwent_data_helper.armor.get(card_id)
-        if armor != None:
+        if armor != None and TYPES.get(card_type) == "Unit":
             card['armor'] = int(armor)
 
         cards[card_id] = card

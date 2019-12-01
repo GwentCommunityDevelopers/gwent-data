@@ -279,9 +279,9 @@ class GwentDataHelper:
         return abilities
 
     def get_card_armor(self):
-        path = self._folder + "Abilities.xml"
+        path = self._folder + "Templates.xml"
         if not os.path.isfile(path):
-            print("Couldn't find abilities.xml at " + path)
+            print("Couldn't find templates.xml at " + path)
             exit()
 
         armor = {}
@@ -289,19 +289,11 @@ class GwentDataHelper:
         tree = xml.parse(path)
         root = tree.getroot()
 
-        for ability in root.iter('Ability'):
-            card_id = None
+        for template in root.iter('Template'):
+            armor_element = template.find('Armor')
 
-            if ability.attrib['Type'] == "CardAbility":
-                card_id = ability.attrib['Template']
-            
-            if card_id:
-                for tempVar in ability.iter('TemporaryVariables'):
-                    children = list(tempVar)
-
-                    for child in children:
-                        if (child.attrib['Name'] == "Armor"):
-                            armor[card_id] = child.attrib['V']
+            if armor_element != None:
+                armor[template.attrib['Id']] = armor_element.text
 
         return armor
 
