@@ -225,9 +225,6 @@ def create_card_json(gwent_data_helper, patch, base_image_url):
                 if token_id in cards:
                     cards[token_id]['released'] = token_id not in INVALID_TOKENS
 
-    # Mark Tactical Advantage as released.
-    cards["202140"]['released'] = True
-
     # Remove any unreleased cards
     for card_id, card in list(cards.items()):
         if not card['released']:
