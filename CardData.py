@@ -174,11 +174,12 @@ def create_card_json(gwent_data_helper, patch, base_image_url):
         variation['variationId'] = variation_id
 
         variation['availability'] = CARD_SETS[availability]
-        collectible = availability in {BASE_SET, THRONEBREAKER_SET, UNMILLABLE_SET, CRIMSONCURSE_SET, NOVIGRAD_SET, IRON_JUDGEMENT_SET}
+        collectible = availability in {BASE_SET, THRONEBREAKER_SET, UNMILLABLE_SET, CRIMSONCURSE_SET, NOVIGRAD_SET, IRON_JUDGEMENT_SET, MERCHANTS_OF_OFIR_SET}
         variation['collectible'] = collectible
 
         # If a card is collectible, we know it has been released.
-        if collectible or card['cardType'] == TYPES[TYPE_STRATEGEM]:
+        # Mark Tactical Advantage as released.
+        if collectible or card_id == "202140":
             card['released'] = True
 
         rarity = int(template.find('Rarity').text)
@@ -192,7 +193,7 @@ def create_card_json(gwent_data_helper, patch, base_image_url):
         if art_id != None:
             art['ingameArtId'] = art_id
 
-        if collectible:
+        if collectible or card_id == "202140": # Get card art for Tactical Advantage
             for image_size in IMAGE_SIZES:
                 art[image_size] = base_image_url.replace("{patch}", patch) \
                     .replace("{cardId}", card_id) \
@@ -224,9 +225,6 @@ def create_card_json(gwent_data_helper, patch, base_image_url):
             for token_id in card.get('related'):
                 if token_id in cards:
                     cards[token_id]['released'] = token_id not in INVALID_TOKENS
-
-    # Mark Tactical Advantage as released.
-    cards["202140"]['released'] = True
 
     # Remove any unreleased cards
     for card_id, card in list(cards.items()):
