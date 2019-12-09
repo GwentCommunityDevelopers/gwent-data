@@ -66,6 +66,7 @@ UNMILLABLE_SET = 10
 CRIMSONCURSE_SET = 11
 NOVIGRAD_SET = 12
 IRON_JUDGEMENT_SET = 13
+MERCHANTS_OF_OFIR_SET = 14
 
 CARD_SETS = {
     TOKEN_SET: "NonOwnable",
@@ -75,7 +76,8 @@ CARD_SETS = {
     UNMILLABLE_SET: "Unmillable",
     CRIMSONCURSE_SET: "CrimsonCurse",
     NOVIGRAD_SET: "Novigrad",
-    IRON_JUDGEMENT_SET: "IronJudgement"
+    IRON_JUDGEMENT_SET: "IronJudgement",
+    MERCHANTS_OF_OFIR_SET: "MerchantsOfOfir",
 }
 
 # Gaunter's 'Higher than 5' and 'Lower than 5' are not actually cards.
@@ -176,7 +178,7 @@ def create_card_json(gwent_data_helper, patch, base_image_url):
         variation['collectible'] = collectible
 
         # If a card is collectible, we know it has been released.
-        if collectible:
+        if collectible or card['cardType'] == TYPES[TYPE_STRATEGEM]:
             card['released'] = True
 
         rarity = int(template.find('Rarity').text)

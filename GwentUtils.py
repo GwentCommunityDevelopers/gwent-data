@@ -185,7 +185,7 @@ class GwentDataHelper:
             tooltip_id = split[0].replace("_tooltip", "").replace("\"", "").lstrip("0")
 
             # Remove any weird tooltip ids e.g. 64_tooltip_lt
-            if "_lt" in tooltip_id:
+            if "_lt" in tooltip_id or "_sa" in tooltip_id or "_b" in tooltip_id or "card_in_maintenance" in tooltip_id:
                 continue
 
             # Remove any quotation marks and new lines.
