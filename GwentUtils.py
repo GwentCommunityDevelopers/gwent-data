@@ -74,7 +74,7 @@ def _get_evaluated_tooltips(raw_tooltips, card_names, card_abilities, card_templ
             tooltips[card_id] = tooltips[card_id].replace(key, value)
 
         # https://github.com/GwentCommunityDevelopers/gwent-data/issues/38
-        tooltips[card_id] = tooltips[card_id].replace("Hoard-B.P.BB_Hoard", "Hoard")
+        tooltips[card_id] = tooltips[card_id].replace("-B.P.BB_Hoard", "")
         tooltips[card_id] = tooltips[card_id].replace("Tribute-B.P.BB_Tribute", "Tribute")
 
         # Now replace all the other card abilities.
